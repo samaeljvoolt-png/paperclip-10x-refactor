@@ -1,7 +1,7 @@
 <div align="center">
   <strong>Paperclip Refactor Foundation</strong>
   <br/>
-  Community-facing fork of Paperclip with a cleaner startup path, centralized onboarding, measured heartbeat runtime, and a conservative refactor baseline.
+  Community-facing fork of Paperclip with modular startup, centralized onboarding, measured heartbeat runtime, and a conservative refactor baseline.
 </div>
 
 <br/>
@@ -13,13 +13,13 @@
 <p align="center">
   <a href="#quickstart"><strong>Quickstart</strong></a> &middot;
   <a href="https://paperclip.ing/docs"><strong>Docs</strong></a> &middot;
-  <a href="https://github.com/paperclipai/paperclip"><strong>GitHub</strong></a> &middot;
+  <a href="https://github.com/samaeljvoolt-png/paperclip-refactor-foundation"><strong>GitHub</strong></a> &middot;
   <a href="https://discord.gg/m4HZY7xNG3"><strong>Discord</strong></a>
 </p>
 
 <p align="center">
-  <a href="https://github.com/paperclipai/paperclip/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License" /></a>
-  <a href="https://github.com/paperclipai/paperclip/stargazers"><img src="https://img.shields.io/github/stars/paperclipai/paperclip?style=flat" alt="Stars" /></a>
+  <a href="https://github.com/samaeljvoolt-png/paperclip-refactor-foundation/blob/master/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License" /></a>
+  <a href="https://github.com/samaeljvoolt-png/paperclip-refactor-foundation/stargazers"><img src="https://img.shields.io/github/stars/samaeljvoolt-png/paperclip-refactor-foundation?style=flat" alt="Stars" /></a>
   <a href="https://discord.gg/m4HZY7xNG3"><img src="https://img.shields.io/discord/000000000?label=discord" alt="Discord" /></a>
 </p>
 
@@ -37,7 +37,7 @@
 
 **If OpenClaw is an _employee_, Paperclip is the _company_**
 
-Paperclip Refactor Foundation is the community-facing refactor fork of Paperclip. It keeps the same orchestration model, but cleans up the startup path, centralizes onboarding behavior, and documents the runtime with real evidence so the codebase is easier to use and extend.
+Paperclip Refactor Foundation is the community-facing refactor fork of Paperclip. It keeps the same orchestration model, but cleans up the startup path, centralizes onboarding behavior, and documents the runtime with real evidence so the codebase is easier to use, evaluate, and extend.
 
 Paperclip is a Node.js server and React UI that orchestrates a team of AI agents to run a business. Bring your own agents, assign goals, and track your agents' work and costs from one dashboard.
 
@@ -53,7 +53,7 @@ It looks like a task manager — but under the hood it has org charts, budgets, 
 
 <br/>
 
-> **COMING SOON: Clipmart** — Download and run entire companies with one click. Browse pre-built company templates — full org structures, agent configs, and skills — and import them into your Paperclip instance in seconds.
+> **Community fork** — This repository is the refactor foundation for the Paperclip codebase. It is intended to be readable, testable, and safe to extend.
 
 <br/>
 

@@ -1,6 +1,6 @@
 # Refactor Documentation
 
-This directory documents the current `paperclip-10x-refactor` execution state in English.
+This directory documents the current Paperclip refactor foundation execution state in English.
 
 The goal is not to restate the source tree line by line. The goal is to explain:
 

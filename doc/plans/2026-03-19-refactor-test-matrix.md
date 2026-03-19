@@ -1,4 +1,4 @@
-# Paperclip 10x Refactor Test Matrix
+# Paperclip Refactor Foundation Test Matrix
 
 | Wave | Change Surface | Required Evidence | Status |
 |---|---|---|---|

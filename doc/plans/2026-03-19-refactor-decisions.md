@@ -1,4 +1,4 @@
-# Paperclip 10x Refactor Decisions
+# Paperclip Refactor Foundation Decisions
 
 ## D1
 

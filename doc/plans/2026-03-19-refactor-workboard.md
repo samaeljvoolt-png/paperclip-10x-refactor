@@ -1,4 +1,4 @@
-# Paperclip 10x Refactor Workboard
+# Paperclip Refactor Foundation Workboard
 
 | Workstream | Owner | Status | Allowed Files | Exit Criteria |
 |---|---|---|---|---|

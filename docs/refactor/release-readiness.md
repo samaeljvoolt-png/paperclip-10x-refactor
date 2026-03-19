@@ -1,6 +1,6 @@
 # Release Readiness
 
-This document closes the current `paperclip-10x-refactor` execution plan.
+This document closes the current Paperclip refactor foundation execution plan.
 
 ## Final State
 

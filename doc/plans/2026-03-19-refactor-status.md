@@ -1,4 +1,4 @@
-# Paperclip 10x Refactor Status
+# Paperclip Refactor Foundation Status
 
 ## Checkpoint 01
 

@@ -1,4 +1,4 @@
-# Paperclip 10x Refactor Risks
+# Paperclip Refactor Foundation Risks
 
 | ID | Risk | Severity | Current State | Mitigation | Owner |
 |---|---|---|---|---|---|

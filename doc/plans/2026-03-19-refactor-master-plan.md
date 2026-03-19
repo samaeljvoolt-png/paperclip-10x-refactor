@@ -1,8 +1,8 @@
-# Paperclip 10x Refactor Master Plan
+# Paperclip Refactor Foundation Master Plan
 
 ## Objective
 
-Turn `paperclip-10x-refactor` into the definitive implementation: safer, easier to operate, and stronger than the original Paperclip baseline while preserving the fork's real runtime constraints.
+Turn this Paperclip refactor fork into the definitive implementation: safer, easier to operate, and stronger than the original Paperclip baseline while preserving the fork's real runtime constraints.
 
 ## Architect Model
 

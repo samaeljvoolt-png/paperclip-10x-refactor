@@ -1,7 +1,7 @@
 ---
 name: paperclip-refactor-orchestrator
 description: >
-  Use when coordinating a large refactor of paperclip-10x-refactor through OpenClaw agents.
+  Use when coordinating a large Paperclip refactor foundation effort through OpenClaw agents.
   Trigger on multi-wave execution, architecture-supervised refactors, ownership-sensitive changes,
   or any request to run backend hardening step by step with documented risks, tests, and status.
 ---
@@ -12,7 +12,7 @@ This skill governs the refactor. It does not replace implementation skill. It ke
 
 ## When To Use
 
-- the user wants to improve `paperclip-10x-refactor` in waves
+- the user wants to improve the Paperclip refactor fork in waves
 - multiple agents must work on one repo without overlapping edits
 - architecture, rollback, and test evidence matter as much as code changes
 - Codex or another supervisor needs repeatable status checkpoints

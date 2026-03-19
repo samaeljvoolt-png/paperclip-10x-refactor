@@ -187,18 +187,39 @@ Open source. Self-hosted. No Paperclip account required.
 npx paperclipai onboard --yes
 ```
 
-Or manually:
+Or install from this repo:
 
 ```bash
-git clone https://github.com/paperclipai/paperclip.git
-cd paperclip
+git clone https://github.com/samaeljvoolt-png/paperclip-refactor-foundation.git
+cd paperclip-refactor-foundation
 pnpm install
 pnpm dev
 ```
 
-This starts the API server at `http://localhost:3100`. An embedded PostgreSQL database is created automatically — no setup required.
+This starts the API server at `http://localhost:3100`. An embedded PostgreSQL database is created automatically - no setup required.
 
 > **Requirements:** Node.js 20+, pnpm 9.15+
+
+### Oracle Server Setup
+
+Use the same repo install flow on your Oracle machine:
+
+```bash
+git clone https://github.com/samaeljvoolt-png/paperclip-refactor-foundation.git
+cd paperclip-refactor-foundation
+pnpm install
+pnpm dev --authenticated-private
+```
+
+If you need OpenClaw to join the instance, follow [OpenClaw onboarding](doc/OPENCLAW_ONBOARDING.md). In practice:
+
+1. start Paperclip in auth mode
+2. start a clean OpenClaw instance
+3. generate the invite prompt
+4. approve the agent join in Paperclip
+5. confirm the agent is using `openclaw_gateway`
+
+For a public or semi-public server, prefer the authenticated/private mode over an open unauthenticated bind.
 
 <br/>
 
@@ -263,8 +284,8 @@ We welcome contributions. See the [contributing guide](CONTRIBUTING.md) for deta
 ## Community
 
 - [Discord](https://discord.gg/m4HZY7xNG3) — Join the community
-- [GitHub Issues](https://github.com/paperclipai/paperclip/issues) — bugs and feature requests
-- [GitHub Discussions](https://github.com/paperclipai/paperclip/discussions) — ideas and RFC
+- [GitHub Issues](https://github.com/samaeljvoolt-png/paperclip-refactor-foundation/issues) — bugs and feature requests
+- [GitHub Discussions](https://github.com/samaeljvoolt-png/paperclip-refactor-foundation/discussions) — ideas and RFC
 
 <br/>
 
@@ -274,7 +295,7 @@ MIT &copy; 2026 Paperclip
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/image?repos=paperclipai/paperclip&type=date&legend=top-left)](https://www.star-history.com/?repos=paperclipai%2Fpaperclip&type=date&legend=top-left)
+[![Star History Chart](https://api.star-history.com/image?repos=samaeljvoolt-png/paperclip-refactor-foundation&type=date&legend=top-left)](https://www.star-history.com/?repos=samaeljvoolt-png%2Fpaperclip-refactor-foundation&type=date&legend=top-left)
 
 <br/>
 

@@ -1,3 +1,11 @@
+<div align="center">
+  <strong>Paperclip Refactor Foundation</strong>
+  <br/>
+  Community-facing fork of Paperclip with a cleaner startup path, centralized onboarding, measured heartbeat runtime, and a conservative refactor baseline.
+</div>
+
+<br/>
+
 <p align="center">
   <img src="doc/assets/header.png" alt="Paperclip — runs your business" width="720" />
 </p>
@@ -23,11 +31,13 @@
 
 <br/>
 
-## What is Paperclip?
+## What is Paperclip Refactor Foundation?
 
 # Open-source orchestration for zero-human companies
 
 **If OpenClaw is an _employee_, Paperclip is the _company_**
+
+Paperclip Refactor Foundation is the community-facing refactor fork of Paperclip. It keeps the same orchestration model, but cleans up the startup path, centralizes onboarding behavior, and documents the runtime with real evidence so the codebase is easier to use and extend.
 
 Paperclip is a Node.js server and React UI that orchestrates a team of AI agents to run a business. Bring your own agents, assign goals, and track your agents' work and costs from one dashboard.
 

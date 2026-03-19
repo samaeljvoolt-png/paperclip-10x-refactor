@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { execFile as execFileCallback } from "node:child_process";
 import { promisify } from "node:util";
-import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, not, sql } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
 import type { BillingType } from "@paperclipai/shared";
 import {
@@ -55,6 +55,11 @@ import {
   resolveSessionCompactionPolicy,
   type SessionCompactionPolicy,
 } from "@paperclipai/adapter-utils";
+import {
+  createLoggingHeartbeatProfiler,
+  withHeartbeatProfile,
+  type HeartbeatProfiler,
+} from "./heartbeat-profiler.js";
 
 const MAX_LIVE_LOG_CHUNK_BYTES = 8 * 1024;
 const HEARTBEAT_MAX_CONCURRENT_RUNS_DEFAULT = 1;
@@ -693,8 +698,16 @@ function resolveNextSessionState(input: {
   };
 }
 
-export function heartbeatService(db: Db) {
+export function heartbeatService(
+  db: Db,
+  opts?: { profiler?: HeartbeatProfiler | null },
+) {
   const instanceSettings = instanceSettingsService(db);
+  const heartbeatProfiler =
+    opts?.profiler ??
+    (asBoolean(process.env.PAPERCLIP_HEARTBEAT_PROFILE, false)
+      ? createLoggingHeartbeatProfiler()
+      : null);
 
   const runLogStore = getRunLogStore();
   const secretsSvc = secretService(db);
@@ -1326,7 +1339,9 @@ export function heartbeatService(db: Db) {
     });
   }
 
-  function parseHeartbeatPolicy(agent: typeof agents.$inferSelect) {
+  function parseHeartbeatPolicy(
+    agent: Pick<typeof agents.$inferSelect, "status" | "runtimeConfig" | "lastHeartbeatAt" | "createdAt">,
+  ) {
     const runtimeConfig = parseObject(agent.runtimeConfig);
     const heartbeat = parseObject(runtimeConfig.heartbeat);
 
@@ -1567,39 +1582,50 @@ export function heartbeatService(db: Db) {
   }
 
   async function startNextQueuedRunForAgent(agentId: string) {
-    return withAgentStartLock(agentId, async () => {
-      const agent = await getAgent(agentId);
-      if (!agent) return [];
-      if (agent.status === "paused" || agent.status === "terminated" || agent.status === "pending_approval") {
-        return [];
-      }
-      const policy = parseHeartbeatPolicy(agent);
-      const runningCount = await countRunningRunsForAgent(agentId);
-      const availableSlots = Math.max(0, policy.maxConcurrentRuns - runningCount);
-      if (availableSlots <= 0) return [];
+    return withHeartbeatProfile(
+      heartbeatProfiler,
+      "startNextQueuedRunForAgent",
+      async () =>
+        withAgentStartLock(agentId, async () => {
+          const agent = await getAgent(agentId);
+          if (!agent) return [];
+          if (agent.status === "paused" || agent.status === "terminated" || agent.status === "pending_approval") {
+            return [];
+          }
+          const policy = parseHeartbeatPolicy(agent);
+          const runningCount = await countRunningRunsForAgent(agentId);
+          const availableSlots = Math.max(0, policy.maxConcurrentRuns - runningCount);
+          if (availableSlots <= 0) return [];
 
-      const queuedRuns = await db
-        .select()
-        .from(heartbeatRuns)
-        .where(and(eq(heartbeatRuns.agentId, agentId), eq(heartbeatRuns.status, "queued")))
-        .orderBy(asc(heartbeatRuns.createdAt))
-        .limit(availableSlots);
-      if (queuedRuns.length === 0) return [];
+          const queuedRuns = await db
+            .select()
+            .from(heartbeatRuns)
+            .where(and(eq(heartbeatRuns.agentId, agentId), eq(heartbeatRuns.status, "queued")))
+            .orderBy(asc(heartbeatRuns.createdAt))
+            .limit(availableSlots);
+          if (queuedRuns.length === 0) return [];
 
-      const claimedRuns: Array<typeof heartbeatRuns.$inferSelect> = [];
-      for (const queuedRun of queuedRuns) {
-        const claimed = await claimQueuedRun(queuedRun);
-        if (claimed) claimedRuns.push(claimed);
-      }
-      if (claimedRuns.length === 0) return [];
+          const claimedRuns: Array<typeof heartbeatRuns.$inferSelect> = [];
+          for (const queuedRun of queuedRuns) {
+            const claimed = await claimQueuedRun(queuedRun);
+            if (claimed) claimedRuns.push(claimed);
+          }
+          if (claimedRuns.length === 0) return [];
 
-      for (const claimedRun of claimedRuns) {
-        void executeRun(claimedRun.id).catch((err) => {
-          logger.error({ err, runId: claimedRun.id }, "queued heartbeat execution failed");
-        });
-      }
-      return claimedRuns;
-    });
+          for (const claimedRun of claimedRuns) {
+            void withHeartbeatProfile(
+              heartbeatProfiler,
+              "executeRun",
+              () => executeRun(claimedRun.id),
+              { agentId: claimedRun.agentId, runId: claimedRun.id },
+            ).catch((err) => {
+              logger.error({ err, runId: claimedRun.id }, "queued heartbeat execution failed");
+            });
+          }
+          return claimedRuns;
+        }),
+      { agentId },
+    );
   }
 
   async function executeRun(runId: string) {
@@ -1696,11 +1722,17 @@ export function heartbeatService(db: Db) {
       issueSettings: issueExecutionWorkspaceSettings,
       legacyUseProjectWorkspace: issueAssigneeOverrides?.useProjectWorkspace ?? null,
     });
-    const resolvedWorkspace = await resolveWorkspaceForRun(
-      agent,
-      context,
-      previousSessionParams,
-      { useProjectWorkspace: executionWorkspaceMode !== "agent_default" },
+    const resolvedWorkspace = await withHeartbeatProfile(
+      heartbeatProfiler,
+      "resolveWorkspaceForRun",
+      () =>
+        resolveWorkspaceForRun(
+          agent,
+          context,
+          previousSessionParams,
+          { useProjectWorkspace: executionWorkspaceMode !== "agent_default" },
+        ),
+      { agentId: agent.id, runId: run.id },
     );
     const workspaceManagedConfig = buildExecutionWorkspaceAdapterConfig({
       agentConfig: config,
@@ -3403,44 +3435,65 @@ export function heartbeatService(db: Db) {
 
     wakeup: enqueueWakeup,
 
-    reapOrphanedRuns,
+    reapOrphanedRuns: (opts?: { staleThresholdMs?: number }) =>
+      withHeartbeatProfile(
+        heartbeatProfiler,
+        "reapOrphanedRuns",
+        () => reapOrphanedRuns(opts),
+        opts,
+      ),
 
-    resumeQueuedRuns,
+    resumeQueuedRuns: () =>
+      withHeartbeatProfile(heartbeatProfiler, "resumeQueuedRuns", () => resumeQueuedRuns()),
 
-    tickTimers: async (now = new Date()) => {
-      const allAgents = await db.select().from(agents);
-      let checked = 0;
-      let enqueued = 0;
-      let skipped = 0;
+    tickTimers: (now = new Date()) =>
+      withHeartbeatProfile(
+        heartbeatProfiler,
+        "tickTimers",
+        async () => {
+          const eligibleAgents = await db
+            .select({
+              id: agents.id,
+              status: agents.status,
+              runtimeConfig: agents.runtimeConfig,
+              lastHeartbeatAt: agents.lastHeartbeatAt,
+              createdAt: agents.createdAt,
+            })
+            .from(agents)
+            .where(not(inArray(agents.status, ["paused", "terminated", "pending_approval"])));
+          let checked = 0;
+          let enqueued = 0;
+          let skipped = 0;
 
-      for (const agent of allAgents) {
-        if (agent.status === "paused" || agent.status === "terminated" || agent.status === "pending_approval") continue;
-        const policy = parseHeartbeatPolicy(agent);
-        if (!policy.enabled || policy.intervalSec <= 0) continue;
+          for (const agent of eligibleAgents) {
+            const policy = parseHeartbeatPolicy(agent);
+            if (!policy.enabled || policy.intervalSec <= 0) continue;
 
-        checked += 1;
-        const baseline = new Date(agent.lastHeartbeatAt ?? agent.createdAt).getTime();
-        const elapsedMs = now.getTime() - baseline;
-        if (elapsedMs < policy.intervalSec * 1000) continue;
+            checked += 1;
+            const baseline = new Date(agent.lastHeartbeatAt ?? agent.createdAt).getTime();
+            const elapsedMs = now.getTime() - baseline;
+            if (elapsedMs < policy.intervalSec * 1000) continue;
 
-        const run = await enqueueWakeup(agent.id, {
-          source: "timer",
-          triggerDetail: "system",
-          reason: "heartbeat_timer",
-          requestedByActorType: "system",
-          requestedByActorId: "heartbeat_scheduler",
-          contextSnapshot: {
-            source: "scheduler",
-            reason: "interval_elapsed",
-            now: now.toISOString(),
-          },
-        });
-        if (run) enqueued += 1;
-        else skipped += 1;
-      }
+            const run = await enqueueWakeup(agent.id, {
+              source: "timer",
+              triggerDetail: "system",
+              reason: "heartbeat_timer",
+              requestedByActorType: "system",
+              requestedByActorId: "heartbeat_scheduler",
+              contextSnapshot: {
+                source: "scheduler",
+                reason: "interval_elapsed",
+                now: now.toISOString(),
+              },
+            });
+            if (run) enqueued += 1;
+            else skipped += 1;
+          }
 
-      return { checked, enqueued, skipped };
-    },
+          return { checked, enqueued, skipped };
+        },
+        { now: now.toISOString() },
+      ),
 
     cancelRun: (runId: string) => cancelRunInternal(runId),
 

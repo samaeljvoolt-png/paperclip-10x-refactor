@@ -14,8 +14,6 @@ import {
   inspectMigrations,
   applyPendingMigrations,
   reconcilePendingMigrationHistory,
-  formatDatabaseBackupResult,
-  runDatabaseBackup,
   authUsers,
   companies,
   companyMemberships,
@@ -23,24 +21,19 @@ import {
 } from "@paperclipai/db";
 import detectPort from "detect-port";
 import { createApp } from "./app.js";
+import type { BetterAuthSessionResult } from "./auth/better-auth.js";
+import { bootstrapAuthenticatedMode } from "./bootstrap/authenticated-mode.js";
+import { setupDatabaseBackupScheduler } from "./bootstrap/database-backup-scheduler.js";
+import { setupHeartbeatScheduler } from "./bootstrap/heartbeat-scheduler.js";
+import { startServerListener } from "./bootstrap/server-listener.js";
 import { loadConfig } from "./config.js";
 import { logger } from "./middleware/logger.js";
 import { setupLiveEventsWebSocketServer } from "./realtime/live-events-ws.js";
-import { heartbeatService, reconcilePersistedRuntimeServicesOnStartup } from "./services/index.js";
+import { reconcilePersistedRuntimeServicesOnStartup } from "./services/index.js";
 import { createStorageServiceFromConfig } from "./storage/index.js";
 import { printStartupBanner } from "./startup-banner.js";
 import { getBoardClaimWarningUrl, initializeBoardClaimChallenge } from "./board-claim.js";
-
-type BetterAuthSessionUser = {
-  id: string;
-  email?: string | null;
-  name?: string | null;
-};
-
-type BetterAuthSessionResult = {
-  session: { id: string; userId: string } | null;
-  user: BetterAuthSessionUser | null;
-};
+import { assertValidDeploymentConfig } from "./bootstrap/deployment-config.js";
 
 type EmbeddedPostgresInstance = {
   initialise(): Promise<void>;
@@ -398,30 +391,7 @@ export async function startServer(): Promise<StartedServer> {
     startupDbInfo = { mode: "embedded-postgres", dataDir, port };
   }
   
-  if (config.deploymentMode === "local_trusted" && !isLoopbackHost(config.host)) {
-    throw new Error(
-      `local_trusted mode requires loopback host binding (received: ${config.host}). ` +
-        "Use authenticated mode for non-loopback deployments.",
-    );
-  }
-  
-  if (config.deploymentMode === "local_trusted" && config.deploymentExposure !== "private") {
-    throw new Error("local_trusted mode only supports private exposure");
-  }
-  
-  if (config.deploymentMode === "authenticated") {
-    if (config.authBaseUrlMode === "explicit" && !config.authPublicBaseUrl) {
-      throw new Error("auth.baseUrlMode=explicit requires auth.publicBaseUrl");
-    }
-    if (config.deploymentExposure === "public") {
-      if (config.authBaseUrlMode !== "explicit") {
-        throw new Error("authenticated public exposure requires auth.baseUrlMode=explicit");
-      }
-      if (!config.authPublicBaseUrl) {
-        throw new Error("authenticated public exposure requires auth.publicBaseUrl");
-      }
-    }
-  }
+  assertValidDeploymentConfig(config);
   
   let authReady = config.deploymentMode === "local_trusted";
   let betterAuthHandler: RequestHandler | undefined;
@@ -435,46 +405,13 @@ export async function startServer(): Promise<StartedServer> {
     await ensureLocalTrustedBoardPrincipal(db as any);
   }
   if (config.deploymentMode === "authenticated") {
-    const {
-      createBetterAuthHandler,
-      createBetterAuthInstance,
-      deriveAuthTrustedOrigins,
-      resolveBetterAuthSession,
-      resolveBetterAuthSessionFromHeaders,
-    } = await import("./auth/better-auth.js");
-    const betterAuthSecret =
-      process.env.BETTER_AUTH_SECRET?.trim() ?? process.env.PAPERCLIP_AGENT_JWT_SECRET?.trim();
-    if (!betterAuthSecret) {
-      throw new Error(
-        "authenticated mode requires BETTER_AUTH_SECRET (or PAPERCLIP_AGENT_JWT_SECRET) to be set",
-      );
-    }
-    const derivedTrustedOrigins = deriveAuthTrustedOrigins(config);
-    const envTrustedOrigins = (process.env.BETTER_AUTH_TRUSTED_ORIGINS ?? "")
-      .split(",")
-      .map((value) => value.trim())
-      .filter((value) => value.length > 0);
-    const effectiveTrustedOrigins = Array.from(new Set([...derivedTrustedOrigins, ...envTrustedOrigins]));
-    logger.info(
-      {
-        authBaseUrlMode: config.authBaseUrlMode,
-        authPublicBaseUrl: config.authPublicBaseUrl ?? null,
-        trustedOrigins: effectiveTrustedOrigins,
-        trustedOriginsSource: {
-          derived: derivedTrustedOrigins.length,
-          env: envTrustedOrigins.length,
-        },
-      },
-      "Authenticated mode auth origin configuration",
-    );
-    const auth = createBetterAuthInstance(db as any, config, effectiveTrustedOrigins);
-    betterAuthHandler = createBetterAuthHandler(auth);
-    resolveSession = (req) => resolveBetterAuthSession(auth, req);
-    resolveSessionFromHeaders = (headers) => resolveBetterAuthSessionFromHeaders(auth, headers);
-    await initializeBoardClaimChallenge(db as any, { deploymentMode: config.deploymentMode });
-    authReady = true;
+  const authenticatedMode = await bootstrapAuthenticatedMode(db as any, config);
+  authReady = authenticatedMode.authReady;
+  betterAuthHandler = authenticatedMode.betterAuthHandler;
+  resolveSession = authenticatedMode.resolveSession;
+  resolveSessionFromHeaders = authenticatedMode.resolveSessionFromHeaders;
   }
-  
+
   const listenPort = await detectPort(config.port);
   const uiMode = config.uiDevMiddleware ? "vite-dev" : config.serveUi ? "static" : "none";
   const storageService = createStorageServiceFromConfig(config);
@@ -524,152 +461,50 @@ export async function startServer(): Promise<StartedServer> {
       logger.error({ err }, "startup reconciliation of persisted runtime services failed");
     });
   
-  if (config.heartbeatSchedulerEnabled) {
-    const heartbeat = heartbeatService(db as any);
-  
-    // Reap orphaned running runs at startup while in-memory execution state is empty,
-    // then resume any persisted queued runs that were waiting on the previous process.
-    void heartbeat
-      .reapOrphanedRuns()
-      .then(() => heartbeat.resumeQueuedRuns())
-      .catch((err) => {
-        logger.error({ err }, "startup heartbeat recovery failed");
-      });
-    setInterval(() => {
-      void heartbeat
-        .tickTimers(new Date())
-        .then((result) => {
-          if (result.enqueued > 0) {
-            logger.info({ ...result }, "heartbeat timer tick enqueued runs");
-          }
-        })
-        .catch((err) => {
-          logger.error({ err }, "heartbeat timer tick failed");
-        });
-  
-      // Periodically reap orphaned runs (5-min staleness threshold) and make sure
-      // persisted queued work is still being driven forward.
-      void heartbeat
-        .reapOrphanedRuns({ staleThresholdMs: 5 * 60 * 1000 })
-        .then(() => heartbeat.resumeQueuedRuns())
-        .catch((err) => {
-          logger.error({ err }, "periodic heartbeat recovery failed");
-        });
-    }, config.heartbeatSchedulerIntervalMs);
-  }
-  
-  if (config.databaseBackupEnabled) {
-    const backupIntervalMs = config.databaseBackupIntervalMinutes * 60 * 1000;
-    let backupInFlight = false;
-  
-    const runScheduledBackup = async () => {
-      if (backupInFlight) {
-        logger.warn("Skipping scheduled database backup because a previous backup is still running");
-        return;
-      }
-  
-      backupInFlight = true;
-      try {
-        const result = await runDatabaseBackup({
-          connectionString: activeDatabaseConnectionString,
-          backupDir: config.databaseBackupDir,
-          retentionDays: config.databaseBackupRetentionDays,
-          filenamePrefix: "paperclip",
-        });
-        logger.info(
-          {
-            backupFile: result.backupFile,
-            sizeBytes: result.sizeBytes,
-            prunedCount: result.prunedCount,
-            backupDir: config.databaseBackupDir,
-            retentionDays: config.databaseBackupRetentionDays,
-          },
-          `Automatic database backup complete: ${formatDatabaseBackupResult(result)}`,
-        );
-      } catch (err) {
-        logger.error({ err, backupDir: config.databaseBackupDir }, "Automatic database backup failed");
-      } finally {
-        backupInFlight = false;
-      }
-    };
-  
-    logger.info(
-      {
-        intervalMinutes: config.databaseBackupIntervalMinutes,
-        retentionDays: config.databaseBackupRetentionDays,
-        backupDir: config.databaseBackupDir,
-      },
-      "Automatic database backups enabled",
-    );
-    setInterval(() => {
-      void runScheduledBackup();
-    }, backupIntervalMs);
-  }
-  
-  await new Promise<void>((resolveListen, rejectListen) => {
-    const onError = (err: Error) => {
-      server.off("error", onError);
-      rejectListen(err);
-    };
-
-    server.once("error", onError);
-    server.listen(listenPort, config.host, () => {
-      server.off("error", onError);
-      logger.info(`Server listening on ${config.host}:${listenPort}`);
-      if (process.env.PAPERCLIP_OPEN_ON_LISTEN === "true") {
-        const openHost = config.host === "0.0.0.0" || config.host === "::" ? "127.0.0.1" : config.host;
-        const url = `http://${openHost}:${listenPort}`;
-        void import("open")
-          .then((mod) => mod.default(url))
-          .then(() => {
-            logger.info(`Opened browser at ${url}`);
-          })
-          .catch((err) => {
-            logger.warn({ err, url }, "Failed to open browser on startup");
-          });
-      }
-      printStartupBanner({
-        host: config.host,
-        deploymentMode: config.deploymentMode,
-        deploymentExposure: config.deploymentExposure,
-        authReady,
-        requestedPort: config.port,
-        listenPort,
-        uiMode,
-        db: startupDbInfo,
-        migrationSummary,
-        heartbeatSchedulerEnabled: config.heartbeatSchedulerEnabled,
-        heartbeatSchedulerIntervalMs: config.heartbeatSchedulerIntervalMs,
-        databaseBackupEnabled: config.databaseBackupEnabled,
-        databaseBackupIntervalMinutes: config.databaseBackupIntervalMinutes,
-        databaseBackupRetentionDays: config.databaseBackupRetentionDays,
-        databaseBackupDir: config.databaseBackupDir,
-      });
-
-      const boardClaimUrl = getBoardClaimWarningUrl(config.host, listenPort);
-      if (boardClaimUrl) {
-        const red = "\x1b[41m\x1b[30m";
-        const yellow = "\x1b[33m";
-        const reset = "\x1b[0m";
-        console.log(
-          [
-            `${red}  BOARD CLAIM REQUIRED  ${reset}`,
-            `${yellow}This instance was previously local_trusted and still has local-board as the only admin.${reset}`,
-            `${yellow}Sign in with a real user and open this one-time URL to claim ownership:${reset}`,
-            `${yellow}${boardClaimUrl}${reset}`,
-            `${yellow}If you are connecting over Tailscale, replace the host in this URL with your Tailscale IP/MagicDNS name.${reset}`,
-          ].join("\n"),
-        );
-      }
-
-      resolveListen();
-    });
+  const stopHeartbeatScheduler = setupHeartbeatScheduler(db as any, {
+    enabled: config.heartbeatSchedulerEnabled,
+    intervalMs: config.heartbeatSchedulerIntervalMs,
   });
+
+  const stopDatabaseBackupScheduler = setupDatabaseBackupScheduler({
+    connectionString: activeDatabaseConnectionString,
+    enabled: config.databaseBackupEnabled,
+    intervalMinutes: config.databaseBackupIntervalMinutes,
+    retentionDays: config.databaseBackupRetentionDays,
+    backupDir: config.databaseBackupDir,
+  });
+  
+  try {
+    await startServerListener({
+      server,
+      host: config.host,
+      listenPort,
+      requestedPort: config.port,
+      deploymentMode: config.deploymentMode,
+      deploymentExposure: config.deploymentExposure,
+      authReady,
+      uiMode,
+      db: startupDbInfo,
+      migrationSummary,
+      heartbeatSchedulerEnabled: config.heartbeatSchedulerEnabled,
+      heartbeatSchedulerIntervalMs: config.heartbeatSchedulerIntervalMs,
+      databaseBackupEnabled: config.databaseBackupEnabled,
+      databaseBackupIntervalMinutes: config.databaseBackupIntervalMinutes,
+      databaseBackupRetentionDays: config.databaseBackupRetentionDays,
+      databaseBackupDir: config.databaseBackupDir,
+    });
+  } catch (error) {
+    stopHeartbeatScheduler();
+    stopDatabaseBackupScheduler();
+    throw error;
+  }
   
   if (embeddedPostgres && embeddedPostgresStartedByThisProcess) {
     const shutdown = async (signal: "SIGINT" | "SIGTERM") => {
       logger.info({ signal }, "Stopping embedded PostgreSQL");
       try {
+        stopHeartbeatScheduler();
+        stopDatabaseBackupScheduler();
         await embeddedPostgres?.stop();
       } catch (err) {
         logger.error({ err }, "Failed to stop embedded PostgreSQL cleanly");

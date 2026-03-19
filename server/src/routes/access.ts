@@ -62,6 +62,7 @@ import {
   toInviteSummaryResponse as onboardingToInviteSummaryResponse
 } from "./access-onboarding.js";
 import { listAvailableSkills, readSkillMarkdown } from "./access-skills.js";
+import { buildPublicUrl, requestBaseUrl } from "../utils/public-url.js";
 
 export {
   onboardingBuildInviteOnboardingManifest as buildInviteOnboardingManifest,
@@ -114,15 +115,6 @@ function tokenHashesMatch(left: string, right: string) {
 function toJoinRequestResponse(row: typeof joinRequests.$inferSelect) {
   const { claimSecretHash: _claimSecretHash, ...safe } = row;
   return safe;
-}
-
-function requestBaseUrl(req: Request) {
-  const forwardedProto = req.header("x-forwarded-proto");
-  const proto = forwardedProto?.split(",")[0]?.trim() || req.protocol || "http";
-  const host =
-    req.header("x-forwarded-host")?.split(",")[0]?.trim() || req.header("host");
-  if (!host) return "";
-  return `${proto}://${host}`;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -327,7 +319,6 @@ function toInviteSummaryResponse(
   token: string,
   invite: typeof invites.$inferSelect
 ) {
-  const baseUrl = requestBaseUrl(req);
   const onboardingPath = `/api/invites/${token}/onboarding`;
   const onboardingTextPath = `/api/invites/${token}/onboarding.txt`;
   const inviteMessage = extractInviteMessage(invite);
@@ -338,15 +329,11 @@ function toInviteSummaryResponse(
     allowedJoinTypes: invite.allowedJoinTypes,
     expiresAt: invite.expiresAt,
     onboardingPath,
-    onboardingUrl: baseUrl ? `${baseUrl}${onboardingPath}` : onboardingPath,
+    onboardingUrl: buildPublicUrl(onboardingPath, req),
     onboardingTextPath,
-    onboardingTextUrl: baseUrl
-      ? `${baseUrl}${onboardingTextPath}`
-      : onboardingTextPath,
+    onboardingTextUrl: buildPublicUrl(onboardingTextPath, req),
     skillIndexPath: "/api/skills/index",
-    skillIndexUrl: baseUrl
-      ? `${baseUrl}/api/skills/index`
-      : "/api/skills/index",
+    skillIndexUrl: buildPublicUrl("/api/skills/index", req),
     inviteMessage
   };
 }
@@ -470,15 +457,11 @@ function buildInviteOnboardingManifest(
 ) {
   const baseUrl = requestBaseUrl(req);
   const skillPath = "/api/skills/paperclip";
-  const skillUrl = baseUrl ? `${baseUrl}${skillPath}` : skillPath;
+  const skillUrl = buildPublicUrl(skillPath, req);
   const registrationEndpointPath = `/api/invites/${token}/accept`;
-  const registrationEndpointUrl = baseUrl
-    ? `${baseUrl}${registrationEndpointPath}`
-    : registrationEndpointPath;
+  const registrationEndpointUrl = buildPublicUrl(registrationEndpointPath, req);
   const onboardingTextPath = `/api/invites/${token}/onboarding.txt`;
-  const onboardingTextUrl = baseUrl
-    ? `${baseUrl}${onboardingTextPath}`
-    : onboardingTextPath;
+  const onboardingTextUrl = buildPublicUrl(onboardingTextPath, req);
   const discoveryDiagnostics = buildOnboardingDiscoveryDiagnostics({
     apiBaseUrl: baseUrl,
     deploymentMode: opts.deploymentMode,

@@ -8,7 +8,7 @@ import type { StorageService } from "./storage/types.js";
 import { httpLogger, errorHandler } from "./middleware/index.js";
 import { actorMiddleware } from "./middleware/auth.js";
 import { boardMutationGuard } from "./middleware/board-mutation-guard.js";
-import { privateHostnameGuard, resolvePrivateHostnameAllowSet } from "./middleware/private-hostname-guard.js";
+import { privateHostnameGuard } from "./middleware/private-hostname-guard.js";
 import { healthRoutes } from "./routes/health.js";
 import { companyRoutes } from "./routes/companies.js";
 import { agentRoutes } from "./routes/agents.js";
@@ -84,10 +84,6 @@ export async function createApp(
   app.use(httpLogger);
   const privateHostnameGateEnabled =
     opts.deploymentMode === "authenticated" && opts.deploymentExposure === "private";
-  const privateHostnameAllowSet = resolvePrivateHostnameAllowSet({
-    allowedHostnames: opts.allowedHostnames,
-    bindHost: opts.bindHost,
-  });
   app.use(
     privateHostnameGuard({
       enabled: privateHostnameGateEnabled,
@@ -254,16 +250,16 @@ export async function createApp(
     const vite = await createViteServer({
       root: uiRoot,
       appType: "custom",
-      server: {
-        middlewareMode: true,
-        hmr: {
-          host: opts.bindHost,
-          port: hmrPort,
-          clientPort: hmrPort,
+        server: {
+          middlewareMode: true,
+          hmr: {
+            host: opts.bindHost,
+            port: hmrPort,
+            clientPort: hmrPort,
+          },
+        allowedHosts: undefined,
         },
-        allowedHosts: privateHostnameGateEnabled ? Array.from(privateHostnameAllowSet) : undefined,
-      },
-    });
+      });
 
     app.use(vite.middlewares);
     app.get(/.*/, async (req, res, next) => {

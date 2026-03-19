@@ -101,6 +101,7 @@
     "dist"
   ],
   "scripts": {
+    "prepare": "pnpm run build",
     "build": "pnpm --filter @paperclipai/shared build && tsc",
     "clean": "rm -rf dist",
     "typecheck": "pnpm --filter @paperclipai/shared build && tsc --noEmit",

@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import express from "express";
 import request from "supertest";
-import { privateHostnameGuard } from "../middleware/private-hostname-guard.js";
+import {
+  privateHostnameGuard,
+  resolvePrivateHostnameAllowSet,
+} from "../middleware/private-hostname-guard.js";
 
 function createApp(opts: { enabled: boolean; allowedHostnames?: string[]; bindHost?: string }) {
   const app = express();
@@ -22,6 +25,18 @@ function createApp(opts: { enabled: boolean; allowedHostnames?: string[]; bindHo
 }
 
 describe("privateHostnameGuard", () => {
+  it("builds a conservative allow-list for vite-dev and private hosting", () => {
+    const allowSet = resolvePrivateHostnameAllowSet({
+      allowedHostnames: ["Example.com", "dotta-macbook-pro", "example.com"],
+      bindHost: "0.0.0.0",
+    });
+
+    expect(Array.from(allowSet)).toEqual(
+      expect.arrayContaining(["example.com", "dotta-macbook-pro", "localhost", "127.0.0.1", "::1"]),
+    );
+    expect(allowSet.has("0.0.0.0")).toBe(false);
+  });
+
   it("allows requests when disabled", async () => {
     const app = createApp({ enabled: false });
     const res = await request(app).get("/api/health").set("Host", "dotta-macbook-pro:3100");

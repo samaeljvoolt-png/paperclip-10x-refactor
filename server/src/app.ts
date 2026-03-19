@@ -8,7 +8,10 @@ import type { StorageService } from "./storage/types.js";
 import { httpLogger, errorHandler } from "./middleware/index.js";
 import { actorMiddleware } from "./middleware/auth.js";
 import { boardMutationGuard } from "./middleware/board-mutation-guard.js";
-import { privateHostnameGuard } from "./middleware/private-hostname-guard.js";
+import {
+  privateHostnameGuard,
+  resolvePrivateHostnameAllowSet
+} from "./middleware/private-hostname-guard.js";
 import { healthRoutes } from "./routes/health.js";
 import { companyRoutes } from "./routes/companies.js";
 import { agentRoutes } from "./routes/agents.js";
@@ -247,19 +250,25 @@ export async function createApp(
     const uiRoot = path.resolve(__dirname, "../../ui");
     const hmrPort = resolveViteHmrPort(opts.serverPort);
     const { createServer: createViteServer } = await import("vite");
+    const viteAllowedHosts = Array.from(
+      resolvePrivateHostnameAllowSet({
+        allowedHostnames: opts.allowedHostnames,
+        bindHost: opts.bindHost,
+      })
+    );
     const vite = await createViteServer({
       root: uiRoot,
       appType: "custom",
-        server: {
-          middlewareMode: true,
-          hmr: {
-            host: opts.bindHost,
-            port: hmrPort,
-            clientPort: hmrPort,
-          },
-        allowedHosts: undefined,
+      server: {
+        middlewareMode: true,
+        allowedHosts: viteAllowedHosts,
+        hmr: {
+          host: opts.bindHost,
+          port: hmrPort,
+          clientPort: hmrPort,
         },
-      });
+      },
+    });
 
     app.use(vite.middlewares);
     app.get(/.*/, async (req, res, next) => {

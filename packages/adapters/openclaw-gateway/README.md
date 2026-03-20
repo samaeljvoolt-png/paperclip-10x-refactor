@@ -55,6 +55,31 @@ The agent request is built as:
   - all `payloadTemplate` fields merged in
   - `agentId` from config if set and not already in template
 
+## Paperclip Claim Files
+
+Paperclip now treats claim storage as **one file per agent**.
+
+- claim file path is derived from the agent slug:
+  - `~/.openclaw/workspace/claims/<agent-slug>.json`
+- supervisors use the reserved classes:
+  - `ceo`
+  - `cto`
+  - `cmo`
+  - `cfo`
+- executors use their own slug, for example:
+  - `dev-researcher`
+  - `sammy`
+  - `visual-director`
+- never reuse one shared claim file across multiple agents
+
+The wake text sent to Paperclip includes:
+
+- `PAPERCLIP_AGENT_KIND`
+- `PAPERCLIP_AGENT_SLUG`
+- `PAPERCLIP_CLAIM_FILE`
+
+For smoke and operational runs, the adapter also tells the agent to do exactly the checklist and stop when complete.
+
 ## Timeouts
 
 - `timeoutSec` controls adapter-level request budget

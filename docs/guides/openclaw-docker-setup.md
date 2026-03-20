@@ -13,12 +13,19 @@ pnpm smoke:openclaw-join
 The harness automates:
 
 - invite creation (`allowedJoinTypes=agent`)
-- OpenClaw agent join request (`adapterType=openclaw`)
+- OpenClaw agent join request (`adapterType=openclaw_gateway`)
 - board approval
 - one-time API key claim (including invalid/replay claim checks)
 - wakeup callback delivery to a dockerized OpenClaw-style webhook receiver
 
 By default, this uses a preconfigured Docker receiver image (`docker/openclaw-smoke`) so the run is deterministic and requires no manual OpenClaw config edits.
+
+Claim handling in Paperclip is now one file per agent:
+
+- supervisors: `~/.openclaw/workspace/claims/ceo.json`, `cto.json`, `cmo.json`, `cfo.json`
+- executors: `~/.openclaw/workspace/claims/<agent-slug>.json`
+
+Do not reuse a shared claim file across multiple agents.
 
 Permissions note:
 
@@ -63,6 +70,8 @@ Environment knobs:
 - `OPENCLAW_RESET_STATE=1` (default) resets smoke agent state on each run to avoid stale auth/session drift
 - `PAPERCLIP_HOST_PORT` (default `3100`)
 - `PAPERCLIP_HOST_FROM_CONTAINER` (default `host.docker.internal`)
+
+When a Paperclip run is explicitly smoke or operational, the adapter wake text now instructs the agent to do exactly the checklist and stop once complete.
 
 ### Authenticated mode
 

@@ -36,6 +36,7 @@ const PAPERCLIP_SKILL_ROOT_RELATIVE_CANDIDATES = [
   "../../skills",
   "../../../../../skills",
 ];
+const SUPERVISOR_AGENT_KEYS = new Set(["ceo", "cto", "cmo", "cfo"]);
 
 export interface PaperclipSkillEntry {
   name: string;
@@ -130,17 +131,67 @@ export function redactEnvForLogs(env: Record<string, string>): Record<string, st
   return redacted;
 }
 
-export function buildPaperclipEnv(agent: { id: string; companyId: string }): Record<string, string> {
+type PaperclipAgentIdentity = {
+  id: string;
+  companyId: string;
+  name?: string | null;
+  role?: string | null;
+};
+
+function normalizeAgentUrlKey(value: string | null | undefined): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return normalized.length > 0 ? normalized : null;
+}
+
+function resolvePaperclipAgentSlug(agent: PaperclipAgentIdentity): string {
+  return (
+    normalizeAgentUrlKey(agent.name) ??
+    normalizeAgentUrlKey(agent.role) ??
+    normalizeAgentUrlKey(agent.id) ??
+    agent.id
+  );
+}
+
+function resolvePaperclipAgentKind(agent: PaperclipAgentIdentity): "supervisor" | "executor" {
+  const roleKey = normalizeAgentUrlKey(agent.role);
+  const nameKey = normalizeAgentUrlKey(agent.name);
+  if ((roleKey && SUPERVISOR_AGENT_KEYS.has(roleKey)) || (nameKey && SUPERVISOR_AGENT_KEYS.has(nameKey))) {
+    return "supervisor";
+  }
+  return "executor";
+}
+
+export function buildPaperclipClaimFilePath(agent: PaperclipAgentIdentity): string {
+  return `~/.openclaw/workspace/claims/${resolvePaperclipAgentSlug(agent)}.json`;
+}
+
+export function buildPaperclipEnv(agent: PaperclipAgentIdentity): Record<string, string> {
   const resolveHostForUrl = (rawHost: string): string => {
     const host = rawHost.trim();
     if (!host || host === "0.0.0.0" || host === "::") return "localhost";
     if (host.includes(":") && !host.startsWith("[") && !host.endsWith("]")) return `[${host}]`;
     return host;
   };
+  const claimFilePath = buildPaperclipClaimFilePath(agent);
   const vars: Record<string, string> = {
     PAPERCLIP_AGENT_ID: agent.id,
     PAPERCLIP_COMPANY_ID: agent.companyId,
+    PAPERCLIP_AGENT_KIND: resolvePaperclipAgentKind(agent),
+    PAPERCLIP_AGENT_SLUG: resolvePaperclipAgentSlug(agent),
+    PAPERCLIP_CLAIM_FILE: claimFilePath,
   };
+  const normalizedRole = normalizeAgentUrlKey(agent.role);
+  if (normalizedRole) {
+    vars.PAPERCLIP_AGENT_ROLE = normalizedRole;
+  }
+  if (agent.name?.trim()) {
+    vars.PAPERCLIP_AGENT_NAME = agent.name.trim();
+  }
   const runtimeHost = resolveHostForUrl(
     process.env.PAPERCLIP_LISTEN_HOST ?? process.env.HOST ?? "localhost",
   );

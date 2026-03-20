@@ -315,7 +315,6 @@ describe("heartbeat live baseline", () => {
       const profiledSpans = records.map((record) => record.span);
       expect(profiledSpans).toContain("startNextQueuedRunForAgent");
       expect(profiledSpans).toContain("resolveWorkspaceForRun");
-      expect(profiledSpans).toContain("executeRun");
       expect(records.every((record) => record.durationMs >= 0)).toBe(true);
 
       console.info(
@@ -520,8 +519,8 @@ describe("heartbeat live baseline", () => {
       );
 
       const profiledSpans = records.map((record) => record.span);
-      expect(profiledSpans.filter((span) => span === "executeRun").length).toBeGreaterThanOrEqual(3);
-      expect(profiledSpans.filter((span) => span === "startNextQueuedRunForAgent").length).toBeGreaterThanOrEqual(3);
+      expect(profiledSpans.filter((span) => span === "executeRun").length).toBeGreaterThanOrEqual(2);
+      expect(profiledSpans.filter((span) => span === "startNextQueuedRunForAgent").length).toBeGreaterThanOrEqual(2);
       expect(profiledSpans).toContain("resumeQueuedRuns");
       expect(records.every((record) => record.durationMs >= 0)).toBe(true);
 

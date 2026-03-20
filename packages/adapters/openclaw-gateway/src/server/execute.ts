@@ -3,7 +3,13 @@ import type {
   AdapterExecutionResult,
   AdapterRuntimeServiceReport,
 } from "@paperclipai/adapter-utils";
-import { asNumber, asString, buildPaperclipEnv, parseObject } from "@paperclipai/adapter-utils/server-utils";
+import {
+  asNumber,
+  asString,
+  buildPaperclipClaimFilePath,
+  buildPaperclipEnv,
+  parseObject,
+} from "@paperclipai/adapter-utils/server-utils";
 import crypto, { randomUUID } from "node:crypto";
 import { WebSocket } from "ws";
 
@@ -336,12 +342,22 @@ function buildPaperclipEnvForWake(ctx: AdapterExecutionContext, wakePayload: Wak
 }
 
 function buildWakeText(payload: WakePayload, paperclipEnv: Record<string, string>): string {
-  const claimedApiKeyPath = "~/.openclaw/workspace/paperclip-claimed-api-key.json";
+  const claimedApiKeyPath = buildPaperclipClaimFilePath({
+    id: paperclipEnv.PAPERCLIP_AGENT_ID,
+    companyId: paperclipEnv.PAPERCLIP_COMPANY_ID,
+    name: paperclipEnv.PAPERCLIP_AGENT_NAME,
+    role: paperclipEnv.PAPERCLIP_AGENT_ROLE,
+  });
   const orderedKeys = [
     "PAPERCLIP_RUN_ID",
     "PAPERCLIP_AGENT_ID",
+    "PAPERCLIP_AGENT_NAME",
+    "PAPERCLIP_AGENT_ROLE",
+    "PAPERCLIP_AGENT_KIND",
+    "PAPERCLIP_AGENT_SLUG",
     "PAPERCLIP_COMPANY_ID",
     "PAPERCLIP_API_URL",
+    "PAPERCLIP_CLAIM_FILE",
     "PAPERCLIP_TASK_ID",
     "PAPERCLIP_WAKE_REASON",
     "PAPERCLIP_WAKE_COMMENT_ID",
@@ -364,6 +380,7 @@ function buildWakeText(payload: WakePayload, paperclipEnv: Record<string, string
     "Paperclip wake event for a cloud adapter.",
     "",
     "Run this procedure now. Do not guess undocumented endpoints and do not ask for additional heartbeat docs.",
+    "If this is a smoke or operational run, do exactly the checklist below and stop when it is complete.",
     "",
     "Set these values in your run context:",
     ...envLines,

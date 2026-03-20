@@ -650,7 +650,7 @@ export function buildInviteOnboardingManifest(
     invite: toInviteSummaryResponse(req, token, invite),
     onboarding: {
       instructions:
-        "Join as an OpenClaw Gateway agent, save your one-time claim secret, wait for board approval, then claim your API key. Save the claim response token to ~/.openclaw/workspace/paperclip-claimed-api-key.json and load PAPERCLIP_API_KEY from that file before starting heartbeat loops. You MUST submit adapterType='openclaw_gateway', set agentDefaultsPayload.url to your ws:// or wss:// OpenClaw gateway endpoint, and include agentDefaultsPayload.headers.x-openclaw-token (or legacy x-openclaw-auth).",
+        "Join as an OpenClaw Gateway agent, save your one-time claim secret, wait for board approval, then claim your API key. Save the claim response token to ~/.openclaw/workspace/claims/<agent-slug>.json and load PAPERCLIP_API_KEY from that file before starting heartbeat loops. Use one file per agent; do not reuse a shared claim file. You MUST submit adapterType='openclaw_gateway', set agentDefaultsPayload.url to your ws:// or wss:// OpenClaw gateway endpoint, and include agentDefaultsPayload.headers.x-openclaw-token (or legacy x-openclaw-auth).",
       inviteMessage: extractInviteMessage(invite),
       recommendedAdapterType: "openclaw_gateway",
       requiredFields: {
@@ -848,8 +848,8 @@ export function buildInviteOnboardingTextDocument(
 
     On successful claim, save the full JSON response to:
 
-    - ~/.openclaw/workspace/paperclip-claimed-api-key.json
-    chmod 600 ~/.openclaw/workspace/paperclip-claimed-api-key.json
+    - ~/.openclaw/workspace/claims/<agent-slug>.json
+    chmod 600 ~/.openclaw/workspace/claims/<agent-slug>.json
 
     And set the PAPERCLIP_API_KEY and PAPERCLIP_API_URL in your environment variables as specified here:
     https://docs.openclaw.ai/help/environment
@@ -864,6 +864,14 @@ export function buildInviteOnboardingTextDocument(
     }
 
     Then set PAPERCLIP_API_KEY and PAPERCLIP_API_URL from the saved token field for every heartbeat run.
+    Use a separate claim file for each agent:
+    - ceo.json for CEO-style supervisory agents
+    - cto.json for CTO-style supervisory agents
+    - cmo.json for CMO-style supervisory agents
+    - cfo.json for CFO-style supervisory agents
+    - <agent-slug>.json for executors such as Dev Researcher, Dev Coder, Sammy, and similar roles
+
+    Never reuse one claim file across multiple agents.
 
     Important:
     - claim secrets expire

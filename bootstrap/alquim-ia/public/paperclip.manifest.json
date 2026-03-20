@@ -1,0 +1,1384 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-03-20T14:57:21.187Z",
+  "source": null,
+  "includes": {
+    "company": true,
+    "agents": true
+  },
+  "company": {
+    "path": "COMPANY.md",
+    "name": "Alquim-IA",
+    "description": null,
+    "brandColor": null,
+    "requireBoardApprovalForNewAgents": true
+  },
+  "agents": [
+    {
+      "slug": "graphic-designer",
+      "name": "Graphic Designer",
+      "path": "agents/graphic-designer/AGENTS.md",
+      "role": "designer",
+      "title": null,
+      "icon": "wand",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "graphic_designer",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "openai/gpt-5.4-mini",
+        "sourceAgentId": "graphic_designer"
+      }
+    },
+    {
+      "slug": "cmo",
+      "name": "CMO",
+      "path": "agents/cmo/AGENTS.md",
+      "role": "cmo",
+      "title": "Chief Marketing Officer",
+      "icon": "sparkles",
+      "capabilities": "Market strategy, brand coherence, and demand generation.",
+      "reportsToSlug": "ceo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "cmo",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": "CEO",
+          "primaryDuty": "Market strategy, brand coherence, and demand generation."
+        },
+        "source": "openclaw",
+        "identity": {
+          "name": "CMO",
+          "vibe": "commercial, clear, high-signal, brand-aware",
+          "emoji": "📣",
+          "creature": "Chief Marketing Officer"
+        },
+        "sourceModel": "openai/gpt-5.4-mini",
+        "sourceAgentId": "cmo"
+      }
+    },
+    {
+      "slug": "nexus",
+      "name": "Nexus",
+      "path": "agents/nexus/AGENTS.md",
+      "role": "cto",
+      "title": "Technical Architecture Lead",
+      "icon": "wrench",
+      "capabilities": "Technical decomposition and implementation control.",
+      "reportsToSlug": "cto",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "dev-architect",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": "CTO",
+          "primaryDuty": "Technical decomposition and implementation control."
+        },
+        "source": "openclaw",
+        "identity": {
+          "name": "Nexus",
+          "vibe": "precise, skeptical, structured, calm",
+          "emoji": "📐",
+          "creature": "Technical Architecture Lead"
+        },
+        "sourceModel": "google/gemini-2.0-pro-exp-02-05",
+        "sourceAgentId": "dev-architect"
+      }
+    },
+    {
+      "slug": "nexo-worker",
+      "name": "Nexo Worker",
+      "path": "agents/nexo-worker/AGENTS.md",
+      "role": "engineer",
+      "title": null,
+      "icon": "code",
+      "capabilities": null,
+      "reportsToSlug": "cto",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "nexo-worker",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "google/gemini-2.0-flash-001",
+        "sourceAgentId": "nexo-worker"
+      }
+    },
+    {
+      "slug": "cfo",
+      "name": "CFO",
+      "path": "agents/cfo/AGENTS.md",
+      "role": "cfo",
+      "title": "Chief Financial Officer",
+      "icon": "database",
+      "capabilities": "Financial control, pricing discipline, and ROI gating.",
+      "reportsToSlug": "ceo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "cfo",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": "CEO",
+          "primaryDuty": "Financial control, pricing discipline, and ROI gating."
+        },
+        "source": "openclaw",
+        "identity": {
+          "name": "CFO",
+          "vibe": "disciplined, skeptical, numerical, risk-aware",
+          "emoji": "📊",
+          "creature": "Chief Financial Officer"
+        },
+        "sourceModel": "bailian/glm-5",
+        "sourceAgentId": "cfo"
+      }
+    },
+    {
+      "slug": "sammy",
+      "name": "Sammy",
+      "path": "agents/sammy/AGENTS.md",
+      "role": "general",
+      "title": null,
+      "icon": "bot",
+      "capabilities": null,
+      "reportsToSlug": "ceo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "sammy",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "bailian/qwen3.5-plus",
+        "sourceAgentId": "sammy"
+      }
+    },
+    {
+      "slug": "brand-guardian",
+      "name": "Brand Guardian",
+      "path": "agents/brand-guardian/AGENTS.md",
+      "role": "cmo",
+      "title": null,
+      "icon": "sparkles",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "brand_guardian",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {
+          "vibe": "Analítico, protector, crítico.",
+          "emoji": "🛡️"
+        },
+        "sourceModel": "bailian/glm-5",
+        "sourceAgentId": "brand_guardian"
+      }
+    },
+    {
+      "slug": "cto",
+      "name": "CTO",
+      "path": "agents/cto/AGENTS.md",
+      "role": "cto",
+      "title": "Chief Technology Officer",
+      "icon": "wrench",
+      "capabilities": "Technical governance and delivery quality.",
+      "reportsToSlug": "ceo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "cto",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": "CEO",
+          "primaryDuty": "Technical governance and delivery quality."
+        },
+        "source": "openclaw",
+        "identity": {
+          "name": "CTO",
+          "vibe": "rigorous, skeptical, structured, pragmatic",
+          "emoji": "⚙️",
+          "creature": "Chief Technology Officer"
+        },
+        "sourceModel": "google/gemini-2.0-pro-exp-02-05",
+        "sourceAgentId": "cto"
+      }
+    },
+    {
+      "slug": "ceo",
+      "name": "CEO",
+      "path": "agents/ceo/AGENTS.md",
+      "role": "ceo",
+      "title": "Chief Executive Officer",
+      "icon": "crown",
+      "capabilities": "Company-level orchestration, delegation, arbitration, and final decision ownership.",
+      "reportsToSlug": null,
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "ceo",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {
+        "canCreateAgents": true
+      },
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": "human owner / operator",
+          "primaryDuty": "Company-level arbitration and final decision ownership."
+        },
+        "source": "openclaw",
+        "identity": {
+          "name": "CEO",
+          "vibe": "decisive, calm, cross-functional, evidence-driven",
+          "emoji": "👑",
+          "creature": "Chief Executive Officer"
+        },
+        "sourceModel": "bailian/qwen3-max-2026-01-23",
+        "sourceAgentId": "ceo"
+      }
+    },
+    {
+      "slug": "growth-hacker",
+      "name": "Growth Hacker",
+      "path": "agents/growth-hacker/AGENTS.md",
+      "role": "cmo",
+      "title": null,
+      "icon": "sparkles",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "growth_hacker",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "xai/grok-4-fast-reasoning",
+        "sourceAgentId": "growth_hacker"
+      }
+    },
+    {
+      "slug": "copywriting",
+      "name": "Copywriting",
+      "path": "agents/copywriting/AGENTS.md",
+      "role": "cmo",
+      "title": null,
+      "icon": "sparkles",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "copywriting",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "minimax/MiniMax-M2.5",
+        "sourceAgentId": "copywriting"
+      }
+    },
+    {
+      "slug": "ai-photography",
+      "name": "Ai Photography",
+      "path": "agents/ai-photography/AGENTS.md",
+      "role": "designer",
+      "title": null,
+      "icon": "wand",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "ai_photography",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "openai/gpt-5.4-mini",
+        "sourceAgentId": "ai_photography"
+      }
+    },
+    {
+      "slug": "growth-research-oracle",
+      "name": "Growth Research Oracle",
+      "path": "agents/growth-research-oracle/AGENTS.md",
+      "role": "cmo",
+      "title": null,
+      "icon": "sparkles",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "growth-research-oracle",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "bailian/qwen3.5-plus",
+        "sourceAgentId": "growth-research-oracle"
+      }
+    },
+    {
+      "slug": "visual-storyteller",
+      "name": "Visual Storyteller",
+      "path": "agents/visual-storyteller/AGENTS.md",
+      "role": "designer",
+      "title": null,
+      "icon": "wand",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "visual_storyteller",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "minimax/MiniMax-M2.5",
+        "sourceAgentId": "visual_storyteller"
+      }
+    },
+    {
+      "slug": "dev-debugger",
+      "name": "Dev Debugger",
+      "path": "agents/dev-debugger/AGENTS.md",
+      "role": "qa",
+      "title": null,
+      "icon": "shield",
+      "capabilities": null,
+      "reportsToSlug": "cto",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "dev-debugger",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "bailian/qwen3-coder-next",
+        "sourceAgentId": "dev-debugger"
+      }
+    },
+    {
+      "slug": "whimsy-injector",
+      "name": "Whimsy Injector",
+      "path": "agents/whimsy-injector/AGENTS.md",
+      "role": "general",
+      "title": null,
+      "icon": "bot",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "whimsy_injector",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "minimax/MiniMax-M2.5",
+        "sourceAgentId": "whimsy_injector"
+      }
+    },
+    {
+      "slug": "social-twitter",
+      "name": "Social Twitter",
+      "path": "agents/social-twitter/AGENTS.md",
+      "role": "cmo",
+      "title": null,
+      "icon": "sparkles",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "social_twitter",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {
+          "vibe": "Directo, provocador, informativo.",
+          "emoji": "🧵"
+        },
+        "sourceModel": "xai/grok-4-fast-reasoning",
+        "sourceAgentId": "social_twitter"
+      }
+    },
+    {
+      "slug": "codex-bridge",
+      "name": "Codex Bridge",
+      "path": "agents/codex-bridge/AGENTS.md",
+      "role": "general",
+      "title": null,
+      "icon": "bot",
+      "capabilities": null,
+      "reportsToSlug": "ceo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "codex-bridge",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "xai/grok-4-fast-reasoning",
+        "sourceAgentId": "codex-bridge"
+      }
+    },
+    {
+      "slug": "editorial-oracle",
+      "name": "Editorial Oracle",
+      "path": "agents/editorial-oracle/AGENTS.md",
+      "role": "cmo",
+      "title": null,
+      "icon": "sparkles",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "editorial-oracle",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "bailian/qwen3.5-plus",
+        "sourceAgentId": "editorial-oracle"
+      }
+    },
+    {
+      "slug": "content-editor",
+      "name": "Content Editor",
+      "path": "agents/content-editor/AGENTS.md",
+      "role": "cmo",
+      "title": null,
+      "icon": "sparkles",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "content_editor",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {
+          "vibe": "Meticuloso, pedagógico, autoritario.",
+          "emoji": "✍️"
+        },
+        "sourceModel": "minimax/MiniMax-M2.5",
+        "sourceAgentId": "content_editor"
+      }
+    },
+    {
+      "slug": "social-facebook",
+      "name": "Social Facebook",
+      "path": "agents/social-facebook/AGENTS.md",
+      "role": "cmo",
+      "title": null,
+      "icon": "sparkles",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "social_facebook",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "bailian/glm-5",
+        "sourceAgentId": "social_facebook"
+      }
+    },
+    {
+      "slug": "social-tiktok",
+      "name": "Social Tiktok",
+      "path": "agents/social-tiktok/AGENTS.md",
+      "role": "cmo",
+      "title": null,
+      "icon": "sparkles",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "social_tiktok",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "bailian/qwen3.5-plus",
+        "sourceAgentId": "social_tiktok"
+      }
+    },
+    {
+      "slug": "creative-director",
+      "name": "Creative Director",
+      "path": "agents/creative-director/AGENTS.md",
+      "role": "designer",
+      "title": "Creative Production Lead",
+      "icon": "wand",
+      "capabilities": "Creative production and execution governance.",
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "creative_director",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": "CMO",
+          "primaryDuty": "Creative production and execution governance."
+        },
+        "source": "openclaw",
+        "identity": {
+          "name": "Creative Director",
+          "vibe": "visionary, organized, quality-obsessed, directive",
+          "emoji": "🎨",
+          "creature": "Creative Production Lead"
+        },
+        "sourceModel": "bailian/qwen3.5-plus",
+        "sourceAgentId": "creative_director"
+      }
+    },
+    {
+      "slug": "content-creator",
+      "name": "Content Creator",
+      "path": "agents/content-creator/AGENTS.md",
+      "role": "cmo",
+      "title": null,
+      "icon": "sparkles",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "content_creator",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "minimax/MiniMax-M2.5",
+        "sourceAgentId": "content_creator"
+      }
+    },
+    {
+      "slug": "visual-director",
+      "name": "Visual Director",
+      "path": "agents/visual-director/AGENTS.md",
+      "role": "designer",
+      "title": null,
+      "icon": "wand",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "visual_director",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {
+          "vibe": "Sofisticado, minimalista, técnico.",
+          "emoji": "🖼️"
+        },
+        "sourceModel": "openai/gpt-5.4-mini",
+        "sourceAgentId": "visual_director"
+      }
+    },
+    {
+      "slug": "dev-coder",
+      "name": "Dev Coder",
+      "path": "agents/dev-coder/AGENTS.md",
+      "role": "engineer",
+      "title": null,
+      "icon": "code",
+      "capabilities": null,
+      "reportsToSlug": "cto",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "dev-coder",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "google/gemini-2.0-pro-exp-02-05",
+        "sourceAgentId": "dev-coder"
+      }
+    },
+    {
+      "slug": "social-instagram",
+      "name": "Social Instagram",
+      "path": "agents/social-instagram/AGENTS.md",
+      "role": "cmo",
+      "title": null,
+      "icon": "sparkles",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "social_instagram",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "bailian/qwen3.5-plus",
+        "sourceAgentId": "social_instagram"
+      }
+    },
+    {
+      "slug": "content-photographer",
+      "name": "Content Photographer",
+      "path": "agents/content-photographer/AGENTS.md",
+      "role": "cmo",
+      "title": null,
+      "icon": "sparkles",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "content_photographer",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "bailian/kimi-k2.5",
+        "sourceAgentId": "content_photographer"
+      }
+    },
+    {
+      "slug": "dev-verifier",
+      "name": "Dev Verifier",
+      "path": "agents/dev-verifier/AGENTS.md",
+      "role": "qa",
+      "title": null,
+      "icon": "shield",
+      "capabilities": null,
+      "reportsToSlug": "cto",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "dev-verifier",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "bailian/qwen3.5-plus",
+        "sourceAgentId": "dev-verifier"
+      }
+    },
+    {
+      "slug": "video-creator",
+      "name": "Video Creator",
+      "path": "agents/video-creator/AGENTS.md",
+      "role": "designer",
+      "title": null,
+      "icon": "wand",
+      "capabilities": null,
+      "reportsToSlug": "cmo",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "video_creator",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "bailian/qwen3.5-plus",
+        "sourceAgentId": "video_creator"
+      }
+    },
+    {
+      "slug": "dev-researcher",
+      "name": "Dev Researcher",
+      "path": "agents/dev-researcher/AGENTS.md",
+      "role": "researcher",
+      "title": null,
+      "icon": "search",
+      "capabilities": null,
+      "reportsToSlug": "cto",
+      "adapterType": "openclaw_gateway",
+      "adapterConfig": {
+        "url": "{{OPENCLAW_GATEWAY_URL}}",
+        "headers": {
+          "x-openclaw-token": "{{OPENCLAW_GATEWAY_TOKEN}}"
+        },
+        "paperclipApiUrl": "{{PAPERCLIP_API_URL}}",
+        "waitTimeoutMs": 600000,
+        "sessionKeyStrategy": "run",
+        "sessionKey": "dev-researcher",
+        "role": "operator",
+        "scopes": [
+          "operator.admin"
+        ]
+      },
+      "runtimeConfig": {
+        "heartbeat": {
+          "enabled": true
+        }
+      },
+      "permissions": {},
+      "budgetMonthlyCents": 0,
+      "metadata": {
+        "soul": {
+          "reportsTo": null,
+          "primaryDuty": null
+        },
+        "source": "openclaw",
+        "identity": {},
+        "sourceModel": "bailian/qwen3.5-plus",
+        "sourceAgentId": "dev-researcher"
+      }
+    }
+  ],
+  "requiredSecrets": [
+    {
+      "key": "OPENCLAW_GATEWAY_URL",
+      "description": "WebSocket URL of your OpenClaw gateway.",
+      "agentSlug": null,
+      "providerHint": "openclaw"
+    },
+    {
+      "key": "OPENCLAW_GATEWAY_TOKEN",
+      "description": "Shared OpenClaw gateway token used by imported agents.",
+      "agentSlug": null,
+      "providerHint": "openclaw"
+    },
+    {
+      "key": "PAPERCLIP_API_URL",
+      "description": "Reachable Paperclip base URL for your OpenClaw agents.",
+      "agentSlug": null,
+      "providerHint": "paperclip"
+    }
+  ]
+}

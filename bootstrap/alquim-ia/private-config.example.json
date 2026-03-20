@@ -1,0 +1,28 @@
+{
+  "paperclip": {
+    "apiUrl": "http://127.0.0.1:3100",
+    "agentReachableApiUrl": "https://claw.alquim-ia.cloud",
+    "companyName": "Alquim-IA"
+  },
+  "openclaw": {
+    "gatewayUrl": "ws://127.0.0.1:18789",
+    "gatewayToken": "replace-with-your-openclaw-gateway-token",
+    "agentsSourceDir": "/absolute/path/to/your/private-openclaw-bundle/agents",
+    "installAgentsDir": "~/.openclaw/agents",
+    "claimsDir": "~/.openclaw/workspace/claims"
+  },
+  "agents": {
+    "ceo": {
+      "sessionKey": "ceo"
+    },
+    "cto": {
+      "sessionKey": "cto"
+    },
+    "cmo": {
+      "sessionKey": "cmo"
+    },
+    "cfo": {
+      "sessionKey": "cfo"
+    }
+  }
+}

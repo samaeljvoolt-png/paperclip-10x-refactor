@@ -200,6 +200,26 @@ This starts the API server at `http://localhost:3100`. An embedded PostgreSQL da
 
 > **Requirements:** Node.js 20+, pnpm 9.15+
 
+### Alquim-IA One-Command Company Install
+
+This branch includes a reproducible company profile for `Alquim-IA`.
+
+After Paperclip itself is installed, create your private config from:
+
+`bootstrap/alquim-ia/private-config.example.json`
+
+Then run:
+
+```bash
+pnpm bootstrap:alquim-ia --private-config ~/.config/paperclip-bootstrap/alquim-ia.private.json
+```
+
+That command imports the curated company, agents, hierarchy, prompts, claim files, and OpenClaw gateway wiring in one pass.
+
+Full guide:
+
+- [Alquim-IA Bootstrap](./docs/deploy/alquim-ia-bootstrap.md)
+
 ### Oracle Server Setup
 
 Use the same repo install flow on your Oracle machine:

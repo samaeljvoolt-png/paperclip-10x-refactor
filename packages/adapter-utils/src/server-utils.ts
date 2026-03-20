@@ -149,6 +149,13 @@ export type PaperclipClaimIdentity = {
 };
 
 function resolvePaperclipClaimsRoot() {
+  const openclawHome = process.env.OPENCLAW_HOME?.trim();
+  if (openclawHome) {
+    if (openclawHome.startsWith("~")) {
+      return path.join(openclawHome, ".openclaw", "workspace", "claims");
+    }
+    return path.join(openclawHome, ".openclaw", "workspace", "claims");
+  }
   const home = process.env.HOME?.trim();
   if (home) return path.join(home, ".openclaw", "workspace", "claims");
   return "~/.openclaw/workspace/claims";

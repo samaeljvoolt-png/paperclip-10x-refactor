@@ -444,8 +444,9 @@ function buildWakeText(payload: WakePayload, paperclipEnv: Record<string, string
     "   - GET /api/issues/{issueId}/comments",
     "   - If the issue body or constraints say 'Single-owner execution' or 'Ejecución de owner único', do not delegate or create child issues. Complete the deliverable directly, register evidence, and close the issue yourself.",
     "   - If the issue asks for a deliverable (report, HTML file, artifact, app, preview, branch, PR, or similar), persist the output first and POST /api/issues/{issueId}/work-products before attempting to mark the issue done.",
-    "   - For file deliverables, create a work product with type=artifact or type=document and metadata.path set to the absolute file path that now exists on disk. Include the same path in the final comment.",
-    "   - For app/code deliverables, create a work product with type=preview_url, runtime_service, pull_request, branch, or commit using a verifiable url or externalId before marking done.",
+    "   - Every work product payload must include type, provider, and title. Do not omit provider/title.",
+    "   - For file deliverables, create a work product with type=artifact or type=document, provider=openclaw, a human-readable title, and metadata.path set to the absolute file path that now exists on disk. Include the same path in the final comment.",
+    "   - For app/code deliverables, create a work product with type=preview_url, runtime_service, pull_request, branch, or commit, plus provider=openclaw, a human-readable title, and a verifiable url or externalId before marking done.",
     "   - If you post a final report, summary, or coordination comment to the user, write it in Spanish unless the issue explicitly requests another language.",
     agentKind === "supervisor"
       ? "   - If the issue is already a child lane, has requestDepth > 0, or asks only for a note/evidence, do not delegate; post the note directly and stop. Otherwise, if delegation is needed, immediately GET /api/companies/{companyId}/agents, create the child issues, POST the coordination comment, and stop."

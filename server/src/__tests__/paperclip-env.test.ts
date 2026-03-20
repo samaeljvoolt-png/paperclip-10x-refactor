@@ -7,6 +7,7 @@ const ORIGINAL_PAPERCLIP_LISTEN_HOST = process.env.PAPERCLIP_LISTEN_HOST;
 const ORIGINAL_PAPERCLIP_LISTEN_PORT = process.env.PAPERCLIP_LISTEN_PORT;
 const ORIGINAL_HOST = process.env.HOST;
 const ORIGINAL_PORT = process.env.PORT;
+const ORIGINAL_OPENCLAW_HOME = process.env.OPENCLAW_HOME;
 const EXPECTED_CLAIMS_ROOT = process.env.HOME
   ? path.join(process.env.HOME, ".openclaw", "workspace", "claims")
   : "~/.openclaw/workspace/claims";
@@ -26,6 +27,9 @@ afterEach(() => {
 
   if (ORIGINAL_PORT === undefined) delete process.env.PORT;
   else process.env.PORT = ORIGINAL_PORT;
+
+  if (ORIGINAL_OPENCLAW_HOME === undefined) delete process.env.OPENCLAW_HOME;
+  else process.env.OPENCLAW_HOME = ORIGINAL_OPENCLAW_HOME;
 });
 
 describe("buildPaperclipEnv", () => {
@@ -93,5 +97,18 @@ describe("buildPaperclipEnv", () => {
       agentKind: "executor",
       claimFilePath: path.join(EXPECTED_CLAIMS_ROOT, "sammy.json"),
     });
+  });
+
+  it("uses OPENCLAW_HOME for isolated claim roots when present", () => {
+    process.env.OPENCLAW_HOME = "/tmp/alquim-openclaw";
+
+    const env = buildPaperclipEnv({ id: "agent-1", companyId: "company-1", name: "Sammy" });
+
+    expect(env.PAPERCLIP_CLAIM_FILE).toBe(
+      "/tmp/alquim-openclaw/.openclaw/workspace/claims/sammy.json",
+    );
+    expect(env.PAPERCLIP_EXPECTED_CLAIM_FILE).toBe(
+      "/tmp/alquim-openclaw/.openclaw/workspace/claims/sammy.json",
+    );
   });
 });

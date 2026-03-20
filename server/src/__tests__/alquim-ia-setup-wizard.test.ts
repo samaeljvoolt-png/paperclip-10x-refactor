@@ -42,6 +42,24 @@ describe("alquim-ia setup wizard helpers", () => {
     ).toThrow(/customBaseUrl/);
   });
 
+  it("supports deepseek via preconfigured custom provider defaults", () => {
+    const provider = getProviderById("deepseek");
+    expect(provider).toBeTruthy();
+
+    const args = buildOpenClawOnboardArgs(provider, {
+      apiKey: "deepseek-secret",
+      customBaseUrl: "https://api.deepseek.com/v1",
+      customModelId: "deepseek-chat",
+    });
+
+    expect(args).toContain("--auth-choice");
+    expect(args).toContain("custom-api-key");
+    expect(args).toContain("--custom-base-url");
+    expect(args).toContain("https://api.deepseek.com/v1");
+    expect(args).toContain("--custom-model-id");
+    expect(args).toContain("deepseek-chat");
+  });
+
   it("builds bootstrap private config with skills and claims paths", () => {
     const config = buildBootstrapPrivateConfig({
       companyName: "Alquim-IA",

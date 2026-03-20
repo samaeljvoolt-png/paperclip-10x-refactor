@@ -603,7 +603,9 @@ describe("openclaw gateway adapter execute", () => {
       expect(message).toContain("GET /api/companies/company-123/agents");
       expect(message).toContain("GET /api/companies/{companyId}/issues?parentId={issueId}");
       expect(message).toContain("POST /api/issues/{issueId}/work-products");
+      expect(message).toContain("Every work product payload must include type, provider, and title.");
       expect(message).toContain("metadata.path set to the absolute file path");
+      expect(message).toContain("provider=openclaw");
       expect(message).toContain("write all final reports, final summaries, deliverables, and user-facing coordination comments in Spanish");
       expect(message).toContain("write it in Spanish unless the issue explicitly requests another language");
       expect(message).toContain("Do not narrate intended actions before making the API calls.");

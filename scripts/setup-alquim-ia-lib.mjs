@@ -46,6 +46,17 @@ const PROVIDER_CATALOG = [
     envVar: "OPENROUTER_API_KEY",
   },
   {
+    id: "deepseek",
+    label: "DeepSeek",
+    authChoice: "custom-api-key",
+    apiKeyFlag: "--custom-api-key",
+    envVar: "DEEPSEEK_API_KEY",
+    requiresBaseUrl: true,
+    requiresModelId: true,
+    defaultBaseUrl: "https://api.deepseek.com/v1",
+    defaultModelId: "deepseek-chat",
+  },
+  {
     id: "mistral",
     label: "Mistral",
     authChoice: "mistral-api-key",
@@ -104,10 +115,15 @@ export function buildOpenClawOnboardArgs(provider, options = {}) {
     "loopback",
     "--gateway-auth",
     "token",
-    "--install-daemon",
     "--skip-skills",
     "--accept-risk",
   ];
+
+  if (options.installDaemon !== false) {
+    args.push("--install-daemon");
+  } else {
+    args.push("--skip-health");
+  }
 
   if (provider.authChoice) {
     args.push("--auth-choice", provider.authChoice);

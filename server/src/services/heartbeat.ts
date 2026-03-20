@@ -64,8 +64,16 @@ import {
 const MAX_LIVE_LOG_CHUNK_BYTES = 8 * 1024;
 const HEARTBEAT_MAX_CONCURRENT_RUNS_DEFAULT = 1;
 const HEARTBEAT_MAX_CONCURRENT_RUNS_MAX = 10;
+const ADAPTER_SHARED_CONCURRENCY_DEFAULTS: Record<string, number> = {
+  openclaw_gateway: 1,
+};
+const ADAPTER_RATE_LIMIT_COOLDOWN_DEFAULTS: Record<string, number> = {
+  openclaw_gateway: 60_000,
+};
 const DEFERRED_WAKE_CONTEXT_KEY = "_paperclipWakeContext";
 const startLocksByAgent = new Map<string, Promise<void>>();
+const startLocksByAdapter = new Map<string, Promise<void>>();
+const adapterCooldownUntilByType = new Map<string, number>();
 const REPO_ONLY_CWD_SENTINEL = "/__paperclip_repo_only__";
 const MANAGED_WORKSPACE_GIT_CLONE_TIMEOUT_MS = 10 * 60 * 1000;
 const execFile = promisify(execFileCallback);
@@ -183,6 +191,78 @@ function normalizeMaxConcurrentRuns(value: unknown) {
   return Math.max(HEARTBEAT_MAX_CONCURRENT_RUNS_DEFAULT, Math.min(HEARTBEAT_MAX_CONCURRENT_RUNS_MAX, parsed));
 }
 
+export function resolveAdapterSharedConcurrencyLimit(
+  adapterType: string | null | undefined,
+  runtimeConfig: Record<string, unknown> | null | undefined,
+) {
+  if (!adapterType) return null;
+  const parsedRuntimeConfig = parseObject(runtimeConfig);
+  const heartbeat = parseObject(parsedRuntimeConfig.heartbeat);
+  const configuredValue = Object.prototype.hasOwnProperty.call(heartbeat, "adapterSharedConcurrencyLimit")
+    ? heartbeat.adapterSharedConcurrencyLimit
+    : Object.prototype.hasOwnProperty.call(heartbeat, "sharedConcurrencyLimit")
+      ? heartbeat.sharedConcurrencyLimit
+      : Object.prototype.hasOwnProperty.call(heartbeat, "maxConcurrentRunsShared")
+        ? heartbeat.maxConcurrentRunsShared
+        : undefined;
+
+  if (configuredValue === null || configuredValue === false) return null;
+
+  const parsed = Math.floor(
+    asNumber(configuredValue, ADAPTER_SHARED_CONCURRENCY_DEFAULTS[adapterType] ?? 0),
+  );
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    const fallback = ADAPTER_SHARED_CONCURRENCY_DEFAULTS[adapterType];
+    return Number.isFinite(fallback) && fallback > 0 ? fallback : null;
+  }
+  return parsed;
+}
+
+function isRateLimitMessage(value: string | null | undefined) {
+  const normalized = value?.trim().toLowerCase() ?? "";
+  return normalized.includes("rate limit");
+}
+
+export function resolveAdapterRateLimitCooldownMs(
+  adapterType: string | null | undefined,
+  runtimeConfig: Record<string, unknown> | null | undefined,
+) {
+  if (!adapterType) return 0;
+  const parsedRuntimeConfig = parseObject(runtimeConfig);
+  const heartbeat = parseObject(parsedRuntimeConfig.heartbeat);
+  const configuredValue = Object.prototype.hasOwnProperty.call(heartbeat, "adapterRateLimitCooldownMs")
+    ? heartbeat.adapterRateLimitCooldownMs
+    : Object.prototype.hasOwnProperty.call(heartbeat, "rateLimitCooldownMs")
+      ? heartbeat.rateLimitCooldownMs
+      : undefined;
+  const fallback = ADAPTER_RATE_LIMIT_COOLDOWN_DEFAULTS[adapterType] ?? 0;
+  const parsed = Math.floor(asNumber(configuredValue, fallback));
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+export function shouldApplyAdapterRateLimitCooldown(
+  adapterType: string | null | undefined,
+  result: Pick<AdapterExecutionResult, "errorCode" | "errorMessage">,
+) {
+  if (!adapterType) return false;
+  return result.errorCode === "openclaw_gateway_rate_limited" || isRateLimitMessage(result.errorMessage ?? null);
+}
+
+function getAdapterCooldownRemainingMs(adapterType: string | null | undefined, now = Date.now()) {
+  if (!adapterType) return 0;
+  const until = adapterCooldownUntilByType.get(adapterType) ?? 0;
+  if (until <= now) {
+    adapterCooldownUntilByType.delete(adapterType);
+    return 0;
+  }
+  return until - now;
+}
+
+function setAdapterCooldown(adapterType: string | null | undefined, cooldownMs: number, now = Date.now()) {
+  if (!adapterType || cooldownMs <= 0) return;
+  adapterCooldownUntilByType.set(adapterType, now + cooldownMs);
+}
+
 async function withAgentStartLock<T>(agentId: string, fn: () => Promise<T>) {
   const previous = startLocksByAgent.get(agentId) ?? Promise.resolve();
   const run = previous.then(fn);
@@ -196,6 +276,23 @@ async function withAgentStartLock<T>(agentId: string, fn: () => Promise<T>) {
   } finally {
     if (startLocksByAgent.get(agentId) === marker) {
       startLocksByAgent.delete(agentId);
+    }
+  }
+}
+
+async function withAdapterStartLock<T>(adapterType: string, fn: () => Promise<T>) {
+  const previous = startLocksByAdapter.get(adapterType) ?? Promise.resolve();
+  const run = previous.then(fn);
+  const marker = run.then(
+    () => undefined,
+    () => undefined,
+  );
+  startLocksByAdapter.set(adapterType, marker);
+  try {
+    return await run;
+  } finally {
+    if (startLocksByAdapter.get(adapterType) === marker) {
+      startLocksByAdapter.delete(adapterType);
     }
   }
 }
@@ -1340,7 +1437,7 @@ export function heartbeatService(
   }
 
   function parseHeartbeatPolicy(
-    agent: Pick<typeof agents.$inferSelect, "status" | "runtimeConfig" | "lastHeartbeatAt" | "createdAt">,
+    agent: Pick<typeof agents.$inferSelect, "status" | "runtimeConfig" | "lastHeartbeatAt" | "createdAt" | "adapterType">,
   ) {
     const runtimeConfig = parseObject(agent.runtimeConfig);
     const heartbeat = parseObject(runtimeConfig.heartbeat);
@@ -1350,6 +1447,7 @@ export function heartbeatService(
       intervalSec: Math.max(0, asNumber(heartbeat.intervalSec, 0)),
       wakeOnDemand: asBoolean(heartbeat.wakeOnDemand ?? heartbeat.wakeOnAssignment ?? heartbeat.wakeOnOnDemand ?? heartbeat.wakeOnAutomation, true),
       maxConcurrentRuns: normalizeMaxConcurrentRuns(heartbeat.maxConcurrentRuns),
+      adapterSharedConcurrencyLimit: resolveAdapterSharedConcurrencyLimit(agent.adapterType, runtimeConfig),
     };
   }
 
@@ -1359,6 +1457,32 @@ export function heartbeatService(
       .from(heartbeatRuns)
       .where(and(eq(heartbeatRuns.agentId, agentId), eq(heartbeatRuns.status, "running")));
     return Number(count ?? 0);
+  }
+
+  async function countRunningRunsForAdapterType(adapterType: string) {
+    const [{ count }] = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(heartbeatRuns)
+      .innerJoin(agents, eq(agents.id, heartbeatRuns.agentId))
+      .where(and(eq(agents.adapterType, adapterType), eq(heartbeatRuns.status, "running")));
+    return Number(count ?? 0);
+  }
+
+  async function startNextQueuedRunsForAdapterType(adapterType: string) {
+    const queued = await db
+      .select({
+        agentId: heartbeatRuns.agentId,
+      })
+      .from(heartbeatRuns)
+      .innerJoin(agents, eq(agents.id, heartbeatRuns.agentId))
+      .where(and(eq(agents.adapterType, adapterType), eq(heartbeatRuns.status, "queued")))
+      .orderBy(asc(heartbeatRuns.createdAt))
+      .limit(50);
+
+    const uniqueAgentIds = [...new Set(queued.map((row) => row.agentId))];
+    for (const agentId of uniqueAgentIds) {
+      await startNextQueuedRunForAgent(agentId);
+    }
   }
 
   async function claimQueuedRun(run: typeof heartbeatRuns.$inferSelect) {
@@ -1592,37 +1716,56 @@ export function heartbeatService(
           if (agent.status === "paused" || agent.status === "terminated" || agent.status === "pending_approval") {
             return [];
           }
+          const startRuns = async () => {
+            const cooldownRemainingMs = getAdapterCooldownRemainingMs(agent.adapterType);
+            if (cooldownRemainingMs > 0) return [];
+            const policy = parseHeartbeatPolicy(agent);
+            const runningCount = await countRunningRunsForAgent(agentId);
+            const availableAgentSlots = Math.max(0, policy.maxConcurrentRuns - runningCount);
+            let availableAdapterSlots = Number.POSITIVE_INFINITY;
+            if (policy.adapterSharedConcurrencyLimit) {
+              const adapterRunningCount = await countRunningRunsForAdapterType(agent.adapterType);
+              availableAdapterSlots = Math.max(0, policy.adapterSharedConcurrencyLimit - adapterRunningCount);
+            }
+            const availableSlots = Math.max(
+              0,
+              Math.min(availableAgentSlots, Number.isFinite(availableAdapterSlots) ? availableAdapterSlots : availableAgentSlots),
+            );
+            if (availableSlots <= 0) return [];
+
+            const queuedRuns = await db
+              .select()
+              .from(heartbeatRuns)
+              .where(and(eq(heartbeatRuns.agentId, agentId), eq(heartbeatRuns.status, "queued")))
+              .orderBy(asc(heartbeatRuns.createdAt))
+              .limit(availableSlots);
+            if (queuedRuns.length === 0) return [];
+
+            const claimedRuns: Array<typeof heartbeatRuns.$inferSelect> = [];
+            for (const queuedRun of queuedRuns) {
+              const claimed = await claimQueuedRun(queuedRun);
+              if (claimed) claimedRuns.push(claimed);
+            }
+            if (claimedRuns.length === 0) return [];
+
+            for (const claimedRun of claimedRuns) {
+              void withHeartbeatProfile(
+                heartbeatProfiler,
+                "executeRun",
+                () => executeRun(claimedRun.id),
+                { agentId: claimedRun.agentId, runId: claimedRun.id },
+              ).catch((err) => {
+                logger.error({ err, runId: claimedRun.id }, "queued heartbeat execution failed");
+              });
+            }
+            return claimedRuns;
+          };
+
           const policy = parseHeartbeatPolicy(agent);
-          const runningCount = await countRunningRunsForAgent(agentId);
-          const availableSlots = Math.max(0, policy.maxConcurrentRuns - runningCount);
-          if (availableSlots <= 0) return [];
-
-          const queuedRuns = await db
-            .select()
-            .from(heartbeatRuns)
-            .where(and(eq(heartbeatRuns.agentId, agentId), eq(heartbeatRuns.status, "queued")))
-            .orderBy(asc(heartbeatRuns.createdAt))
-            .limit(availableSlots);
-          if (queuedRuns.length === 0) return [];
-
-          const claimedRuns: Array<typeof heartbeatRuns.$inferSelect> = [];
-          for (const queuedRun of queuedRuns) {
-            const claimed = await claimQueuedRun(queuedRun);
-            if (claimed) claimedRuns.push(claimed);
+          if (policy.adapterSharedConcurrencyLimit) {
+            return withAdapterStartLock(agent.adapterType, startRuns);
           }
-          if (claimedRuns.length === 0) return [];
-
-          for (const claimedRun of claimedRuns) {
-            void withHeartbeatProfile(
-              heartbeatProfiler,
-              "executeRun",
-              () => executeRun(claimedRun.id),
-              { agentId: claimedRun.agentId, runId: claimedRun.id },
-            ).catch((err) => {
-              logger.error({ err, runId: claimedRun.id }, "queued heartbeat execution failed");
-            });
-          }
-          return claimedRuns;
+          return startRuns();
         }),
       { agentId },
     );
@@ -2374,6 +2517,12 @@ export function heartbeatService(
           }
         }
       }
+      if (shouldApplyAdapterRateLimitCooldown(agent.adapterType, adapterResult)) {
+        setAdapterCooldown(
+          agent.adapterType,
+          resolveAdapterRateLimitCooldownMs(agent.adapterType, agent.runtimeConfig),
+        );
+      }
       await finalizeAgentStatus(agent.id, outcome);
     } catch (err) {
       const message = redactCurrentUserText(err instanceof Error ? err.message : "Unknown adapter failure");
@@ -2470,6 +2619,10 @@ export function heartbeatService(
           await releaseRuntimeServicesForRun(run.id).catch(() => undefined);
           activeRunExecutions.delete(run.id);
           await startNextQueuedRunForAgent(run.agentId);
+          const finishedAgent = await getAgent(run.agentId).catch(() => null);
+          if (finishedAgent?.adapterType) {
+            await startNextQueuedRunsForAdapterType(finishedAgent.adapterType).catch(() => undefined);
+          }
         }
   }
 
@@ -3242,6 +3395,10 @@ export function heartbeatService(
     runningProcesses.delete(run.id);
     await finalizeAgentStatus(run.agentId, "cancelled");
     await startNextQueuedRunForAgent(run.agentId);
+    const cancelledAgent = await getAgent(run.agentId).catch(() => null);
+    if (cancelledAgent?.adapterType) {
+      await startNextQueuedRunsForAdapterType(cancelledAgent.adapterType).catch(() => undefined);
+    }
     return cancelled;
   }
 
@@ -3454,6 +3611,7 @@ export function heartbeatService(
           const eligibleAgents = await db
             .select({
               id: agents.id,
+              adapterType: agents.adapterType,
               status: agents.status,
               runtimeConfig: agents.runtimeConfig,
               lastHeartbeatAt: agents.lastHeartbeatAt,

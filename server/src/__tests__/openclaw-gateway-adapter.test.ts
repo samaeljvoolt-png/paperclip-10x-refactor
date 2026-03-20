@@ -41,6 +41,7 @@ function buildContext(
 
 async function createMockGatewayServer(options?: {
   waitPayload?: Record<string, unknown>;
+  waitEvents?: Array<Record<string, unknown>>;
 }) {
   const server = createServer();
   const wss = new WebSocketServer({ server });
@@ -136,6 +137,15 @@ async function createMockGatewayServer(options?: {
       }
 
       if (frame.method === "agent.wait") {
+        for (const event of options?.waitEvents ?? []) {
+          socket.send(
+            JSON.stringify({
+              type: "event",
+              event: "agent",
+              payload: event,
+            }),
+          );
+        }
         socket.send(
           JSON.stringify({
             type: "res",
@@ -456,6 +466,8 @@ describe("openclaw gateway adapter execute", () => {
       expect(String(payload?.message ?? "")).toContain("wake now");
       expect(String(payload?.message ?? "")).toContain("PAPERCLIP_RUN_ID=run-123");
       expect(String(payload?.message ?? "")).toContain("PAPERCLIP_TASK_ID=task-123");
+      expect(String(payload?.message ?? "")).toContain("Use X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID on every Paperclip API call.");
+      expect(String(payload?.message ?? "")).toContain("Suggested validation: CLAIM_PATH=");
 
       expect(logs.some((entry) => entry.includes("[openclaw-gateway:event] run=run-123 stream=assistant"))).toBe(true);
     } finally {
@@ -553,9 +565,120 @@ describe("openclaw gateway adapter execute", () => {
       await gateway.close();
     }
   });
+
+  it("includes supervisor orchestration guidance for supervisor agents", async () => {
+    const gateway = await createMockGatewayServer();
+
+    try {
+      const result = await execute(
+        buildContext(
+          {
+            url: gateway.url,
+            headers: {
+              "x-openclaw-token": "gateway-token",
+            },
+            payloadTemplate: {
+              message: "wake now",
+            },
+            waitTimeoutMs: 2000,
+          },
+          {
+            agent: {
+              id: "agent-123",
+              companyId: "company-123",
+              name: "CEO",
+              role: "ceo",
+              adapterType: "openclaw_gateway",
+              adapterConfig: {},
+            },
+          },
+        ),
+      );
+
+      expect(result.exitCode).toBe(0);
+      const message = String(gateway.getAgentPayload()?.message ?? "");
+      expect(message).toContain("Supervisor orchestration rules:");
+      expect(message).toContain("Do not narrate your plan in the session transcript.");
+      expect(message).toContain("treat the issue as a leaf lane");
+      expect(message).toContain("GET /api/companies/company-123/agents");
+      expect(message).toContain("GET /api/companies/{companyId}/issues?parentId={issueId}");
+      expect(message).toContain("POST /api/issues/{issueId}/work-products");
+      expect(message).toContain("metadata.path set to the absolute file path");
+      expect(message).toContain("write all final reports, final summaries, deliverables, and user-facing coordination comments in Spanish");
+      expect(message).toContain("write it in Spanish unless the issue explicitly requests another language");
+      expect(message).toContain("Do not narrate intended actions before making the API calls.");
+      expect(message).toContain("If the issue is already a child lane, has requestDepth > 0, or asks only for a note/evidence, do not delegate");
+      expect(message).toContain("Do not stay in a long synchronous loop waiting for specialists.");
+    } finally {
+      await gateway.close();
+    }
+  });
+
+  it("returns a rate-limited error when the gateway emits lifecycle rate-limit failures", async () => {
+    const gateway = await createMockGatewayServer({
+      waitEvents: [
+        {
+          runId: "run-123",
+          stream: "lifecycle",
+          data: {
+            phase: "error",
+            error: "API rate limit reached. Please try again later.",
+          },
+        },
+      ],
+    });
+
+    try {
+      const result = await execute(
+        buildContext({
+          url: gateway.url,
+          headers: {
+            "x-openclaw-token": "gateway-token",
+          },
+          waitTimeoutMs: 2000,
+        }),
+      );
+
+      expect(result.exitCode).toBe(1);
+      expect(result.errorCode).toBe("openclaw_gateway_rate_limited");
+      expect(result.errorMessage).toContain("rate limit");
+    } finally {
+      await gateway.close();
+    }
+  });
 });
 
 describe("openclaw gateway ui build config", () => {
+  it("applies long-running defaults suitable for delegated audits", () => {
+    const config = buildOpenClawGatewayConfig({
+      adapterType: "openclaw_gateway",
+      cwd: "",
+      promptTemplate: "",
+      model: "",
+      thinkingEffort: "",
+      chrome: false,
+      dangerouslySkipPermissions: false,
+      search: false,
+      dangerouslyBypassSandbox: false,
+      command: "",
+      args: "",
+      extraArgs: "",
+      envVars: "",
+      envBindings: {},
+      url: "ws://localhost:18789",
+      payloadTemplateJson: "",
+      runtimeServicesJson: "",
+      bootstrapPrompt: "",
+      maxTurnsPerRun: 0,
+      heartbeatEnabled: true,
+      intervalSec: 300,
+    });
+
+    expect(config.timeoutSec).toBe(600);
+    expect(config.waitTimeoutMs).toBe(600000);
+    expect(config.sessionKeyStrategy).toBe("issue");
+  });
+
   it("parses payload template and runtime services json", () => {
     const config = buildOpenClawGatewayConfig({
       adapterType: "openclaw_gateway",

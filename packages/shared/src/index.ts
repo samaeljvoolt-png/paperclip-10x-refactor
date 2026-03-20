@@ -240,6 +240,18 @@ export type {
   PluginJobRecord,
   PluginJobRunRecord,
   PluginWebhookDeliveryRecord,
+  PromptCompilerIntentType,
+  PromptCompilerLanguage,
+  PromptCompilerLanguagePreference,
+  PromptCompilerStatus,
+  PromptCompilerGateStatus,
+  PromptCompilerRisk,
+  PromptCompilerRoleRouting,
+  PromptCompilerBrief,
+  PromptCompilerIssueDraft,
+  PromptCompilerValidationIssue,
+  PromptCompilerValidationResult,
+  PromptCompilerCompileResponse,
   QuotaWindow,
   ProviderQuotaResult,
 } from "./types/index.js";
@@ -301,6 +313,19 @@ export {
   issueDocumentFormatSchema,
   issueDocumentKeySchema,
   upsertIssueDocumentSchema,
+  promptCompilerIntentTypeSchema,
+  promptCompilerLanguageSchema,
+  promptCompilerLanguagePreferenceSchema,
+  promptCompilerStatusSchema,
+  promptCompilerGateStatusSchema,
+  promptCompilerRiskSchema,
+  promptCompilerRoleRoutingSchema,
+  promptCompilerBriefSchema,
+  promptCompilerValidationIssueSchema,
+  promptCompilerValidationResultSchema,
+  promptCompilerCompileRequestSchema,
+  promptCompilerIssueDraftSchema,
+  createIssueFromCompiledBriefSchema,
   type CreateIssue,
   type CreateIssueLabel,
   type UpdateIssue,
@@ -313,6 +338,8 @@ export {
   type UpdateExecutionWorkspace,
   type IssueDocumentFormat,
   type UpsertIssueDocument,
+  type PromptCompilerCompileRequest,
+  type CreateIssueFromCompiledBrief,
   createGoalSchema,
   updateGoalSchema,
   type CreateGoal,
@@ -415,6 +442,15 @@ export {
 
 export { API_PREFIX, API } from "./api.js";
 export { normalizeAgentUrlKey, deriveAgentUrlKey, isUuidLike } from "./agent-url-key.js";
+export {
+  getOrgManagerRoleCandidates,
+  getOrgManagerRoleForAgent,
+  getOrgRoleBand,
+  getOrgRoleBandForAgent,
+  getOrgRoleFlowLabel,
+  getOrgRoleRank,
+  type OrgRoleBand,
+} from "./org-hierarchy.js";
 export { deriveProjectUrlKey, normalizeProjectUrlKey } from "./project-url-key.js";
 export {
   PROJECT_MENTION_SCHEME,

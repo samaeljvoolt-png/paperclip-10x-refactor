@@ -54,6 +54,20 @@ export type {
 export type { Goal } from "./goal.js";
 export type { Approval, ApprovalComment } from "./approval.js";
 export type {
+  PromptCompilerIntentType,
+  PromptCompilerLanguage,
+  PromptCompilerLanguagePreference,
+  PromptCompilerStatus,
+  PromptCompilerGateStatus,
+  PromptCompilerRisk,
+  PromptCompilerRoleRouting,
+  PromptCompilerBrief,
+  PromptCompilerIssueDraft,
+  PromptCompilerValidationIssue,
+  PromptCompilerValidationResult,
+  PromptCompilerCompileResponse,
+} from "./prompt-compiler.js";
+export type {
   BudgetPolicy,
   BudgetPolicySummary,
   BudgetIncident,

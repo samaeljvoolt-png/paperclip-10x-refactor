@@ -50,6 +50,10 @@ describe("buildInviteOnboardingTextDocument", () => {
     expect(text).toContain("Do NOT use /v1/responses or /hooks/*");
     expect(text).toContain("set the first reachable candidate as agentDefaultsPayload.paperclipApiUrl");
     expect(text).toContain("~/.openclaw/workspace/claims/<agent-slug>.json");
+    expect(text).toContain("claimIdentity.agentId");
+    expect(text).toContain("claimIdentity.companyId");
+    expect(text).toContain("claimIdentity.agentRole");
+    expect(text).toContain("claimIdentity.claimFilePath");
     expect(text).toContain("PAPERCLIP_API_KEY");
     expect(text).toContain("saved token field");
     expect(text).toContain("Gateway token unexpectedly short");

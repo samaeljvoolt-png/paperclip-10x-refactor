@@ -8,33 +8,14 @@ interface AvailableSkill {
   isPaperclipManaged: boolean;
 }
 
-export function readSkillMarkdown(skillName: string): string | null {
-  const normalized = skillName.trim().toLowerCase();
-  if (
-    normalized !== "paperclip" &&
-    normalized !== "paperclip-create-agent" &&
-    normalized !== "paperclip-create-plugin" &&
-    normalized !== "para-memory-files"
-  ) {
-    return null;
-  }
-  const moduleDir = path.dirname(fileURLToPath(import.meta.url));
-  const candidates = [
-    path.resolve(moduleDir, "../../skills", normalized, "SKILL.md"),
-    path.resolve(process.cwd(), "skills", normalized, "SKILL.md"),
-    path.resolve(moduleDir, "../../../skills", normalized, "SKILL.md"),
-  ];
-  for (const skillPath of candidates) {
+export function resolvePaperclipSkillsDir(customDir?: string | null): string | null {
+  if (customDir) {
     try {
-      return fs.readFileSync(skillPath, "utf8");
+      if (fs.statSync(customDir).isDirectory()) return customDir;
     } catch {
-      // Continue to next candidate.
+      return null;
     }
   }
-  return null;
-}
-
-function resolvePaperclipSkillsDir(): string | null {
   const moduleDir = path.dirname(fileURLToPath(import.meta.url));
   const candidates = [
     path.resolve(moduleDir, "../../skills"),
@@ -49,6 +30,92 @@ function resolvePaperclipSkillsDir(): string | null {
     }
   }
   return null;
+}
+
+function resolvePaperclipSkillMarkdownPath(skillName: string, customDir?: string | null): string | null {
+  const normalized = skillName.trim().toLowerCase();
+  if (!normalized) return null;
+  const skillsDir = resolvePaperclipSkillsDir(customDir);
+  if (!skillsDir) return null;
+  const skillPath = path.join(skillsDir, normalized, "SKILL.md");
+  try {
+    if (fs.statSync(skillPath).isFile()) return skillPath;
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+export function readSkillMarkdown(skillName: string, customDir?: string | null): string | null {
+  const skillPath = resolvePaperclipSkillMarkdownPath(skillName, customDir);
+  if (!skillPath) return null;
+  try {
+    return fs.readFileSync(skillPath, "utf8");
+  } catch {
+    return null;
+  }
+}
+
+export function listPaperclipManagedSkills(customDir?: string | null): AvailableSkill[] {
+  const skillsDir = resolvePaperclipSkillsDir(customDir);
+  if (!skillsDir) return [];
+  const skills: AvailableSkill[] = [];
+  try {
+    for (const entry of fs.readdirSync(skillsDir, { withFileTypes: true })) {
+      if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
+      if (entry.name.startsWith(".")) continue;
+      const markdown = readSkillMarkdown(entry.name, skillsDir);
+      if (!markdown) continue;
+      skills.push({
+        name: entry.name,
+        description: parseSkillFrontmatter(markdown).description,
+        isPaperclipManaged: true,
+      });
+    }
+  } catch {
+    return [];
+  }
+  skills.sort((a, b) => a.name.localeCompare(b.name));
+  return skills;
+}
+
+export function listAvailableSkills(customPaths?: {
+  claudeSkillsDir?: string | null;
+  paperclipSkillsDir?: string | null;
+}): AvailableSkill[] {
+  const homeDir = process.env.HOME || process.env.USERPROFILE || "";
+  const claudeSkillsDir = customPaths?.claudeSkillsDir ?? path.join(homeDir, ".claude", "skills");
+  const paperclipSkillsDir = resolvePaperclipSkillsDir(customPaths?.paperclipSkillsDir);
+
+  const skills = new Map<string, AvailableSkill>();
+  for (const skill of listPaperclipManagedSkills(paperclipSkillsDir)) {
+    skills.set(skill.name, skill);
+  }
+
+  try {
+    const entries = fs.readdirSync(claudeSkillsDir, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
+      if (entry.name.startsWith(".")) continue;
+      const skillMdPath = path.join(claudeSkillsDir, entry.name, "SKILL.md");
+      let description = "";
+      try {
+        const md = fs.readFileSync(skillMdPath, "utf8");
+        description = parseSkillFrontmatter(md).description;
+      } catch {
+        // No readable SKILL.md.
+      }
+      skills.set(entry.name, {
+        name: entry.name,
+        description,
+        isPaperclipManaged: skills.get(entry.name)?.isPaperclipManaged ?? false,
+      });
+    }
+  } catch {
+    // ~/.claude/skills/ doesn't exist.
+  }
+
+  return [...skills.values()].sort((a, b) => a.name.localeCompare(b.name));
 }
 
 function parseSkillFrontmatter(markdown: string): { description: string } {
@@ -68,48 +135,4 @@ function parseSkillFrontmatter(markdown: string): { description: string } {
       .join(" ")
       .trim(),
   };
-}
-
-export function listAvailableSkills(): AvailableSkill[] {
-  const homeDir = process.env.HOME || process.env.USERPROFILE || "";
-  const claudeSkillsDir = path.join(homeDir, ".claude", "skills");
-  const paperclipSkillsDir = resolvePaperclipSkillsDir();
-
-  const paperclipSkillNames = new Set<string>();
-  if (paperclipSkillsDir) {
-    try {
-      for (const entry of fs.readdirSync(paperclipSkillsDir, { withFileTypes: true })) {
-        if (entry.isDirectory()) paperclipSkillNames.add(entry.name);
-      }
-    } catch {
-      // Ignore missing paperclip skills directory.
-    }
-  }
-
-  const skills: AvailableSkill[] = [];
-  try {
-    const entries = fs.readdirSync(claudeSkillsDir, { withFileTypes: true });
-    for (const entry of entries) {
-      if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
-      if (entry.name.startsWith(".")) continue;
-      const skillMdPath = path.join(claudeSkillsDir, entry.name, "SKILL.md");
-      let description = "";
-      try {
-        const md = fs.readFileSync(skillMdPath, "utf8");
-        description = parseSkillFrontmatter(md).description;
-      } catch {
-        // No readable SKILL.md.
-      }
-      skills.push({
-        name: entry.name,
-        description,
-        isPaperclipManaged: paperclipSkillNames.has(entry.name),
-      });
-    }
-  } catch {
-    // ~/.claude/skills/ doesn't exist.
-  }
-
-  skills.sort((a, b) => a.name.localeCompare(b.name));
-  return skills;
 }

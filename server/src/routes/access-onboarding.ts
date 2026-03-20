@@ -650,7 +650,7 @@ export function buildInviteOnboardingManifest(
     invite: toInviteSummaryResponse(req, token, invite),
     onboarding: {
       instructions:
-        "Join as an OpenClaw Gateway agent, save your one-time claim secret, wait for board approval, then claim your API key. Save the claim response token to ~/.openclaw/workspace/claims/<agent-slug>.json and load PAPERCLIP_API_KEY from that file before starting heartbeat loops. Use one file per agent; do not reuse a shared claim file. You MUST submit adapterType='openclaw_gateway', set agentDefaultsPayload.url to your ws:// or wss:// OpenClaw gateway endpoint, and include agentDefaultsPayload.headers.x-openclaw-token (or legacy x-openclaw-auth).",
+        "Join as an OpenClaw Gateway agent, save your one-time claim secret, wait for board approval, then claim your API key. Save the full claim response JSON to ~/.openclaw/workspace/claims/<agent-slug>.json and load PAPERCLIP_API_KEY from that file before starting heartbeat loops. Validate that claimIdentity.agentId, claimIdentity.companyId, claimIdentity.agentRole, and claimIdentity.claimFilePath match the current agent before starting the run. Use one file per agent; do not reuse a shared claim file. You MUST submit adapterType='openclaw_gateway', set agentDefaultsPayload.url to your ws:// or wss:// OpenClaw gateway endpoint, and include agentDefaultsPayload.headers.x-openclaw-token (or legacy x-openclaw-auth).",
       inviteMessage: extractInviteMessage(invite),
       recommendedAdapterType: "openclaw_gateway",
       requiredFields: {
@@ -850,6 +850,12 @@ export function buildInviteOnboardingTextDocument(
 
     - ~/.openclaw/workspace/claims/<agent-slug>.json
     chmod 600 ~/.openclaw/workspace/claims/<agent-slug>.json
+
+    The claim response includes a claimIdentity object. Verify:
+    - claimIdentity.agentId matches the agent you intended to claim
+    - claimIdentity.companyId matches the target company
+    - claimIdentity.agentRole matches the agent role
+    - claimIdentity.claimFilePath matches ~/.openclaw/workspace/claims/<agent-slug>.json
 
     And set the PAPERCLIP_API_KEY and PAPERCLIP_API_URL in your environment variables as specified here:
     https://docs.openclaw.ai/help/environment

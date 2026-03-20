@@ -96,6 +96,27 @@ export {
 } from "./issue.js";
 
 export {
+  promptCompilerIntentTypeSchema,
+  promptCompilerLanguageSchema,
+  promptCompilerLanguagePreferenceSchema,
+  promptCompilerStatusSchema,
+  promptCompilerGateStatusSchema,
+  promptCompilerRiskSchema,
+  promptCompilerRoleRoutingSchema,
+  promptCompilerBriefSchema,
+  promptCompilerValidationIssueSchema,
+  promptCompilerValidationResultSchema,
+  promptCompilerCompileRequestSchema,
+  promptCompilerIssueDraftSchema,
+  createIssueFromCompiledBriefSchema,
+  type PromptCompilerCompileRequest,
+  type PromptCompilerBrief,
+  type PromptCompilerValidationResult,
+  type PromptCompilerIssueDraft,
+  type CreateIssueFromCompiledBrief,
+} from "./prompt-compiler.js";
+
+export {
   createIssueWorkProductSchema,
   updateIssueWorkProductSchema,
   issueWorkProductTypeSchema,

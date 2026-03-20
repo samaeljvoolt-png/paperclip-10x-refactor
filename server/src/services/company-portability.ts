@@ -88,9 +88,9 @@ const ADAPTER_DEFAULT_RULES_BY_TYPE: Record<string, Array<{ path: string[]; valu
     { path: ["maxTurnsPerRun"], value: 300 },
   ],
   openclaw_gateway: [
-    { path: ["timeoutSec"], value: 120 },
-    { path: ["waitTimeoutMs"], value: 120000 },
-    { path: ["sessionKeyStrategy"], value: "fixed" },
+    { path: ["timeoutSec"], value: 600 },
+    { path: ["waitTimeoutMs"], value: 600000 },
+    { path: ["sessionKeyStrategy"], value: "issue" },
     { path: ["sessionKey"], value: "paperclip" },
     { path: ["role"], value: "operator" },
     { path: ["scopes"], value: ["operator.admin"] },
@@ -920,7 +920,6 @@ export function companyPortabilityService(db: Db) {
           title: manifestAgent.title,
           icon: manifestAgent.icon,
           capabilities: manifestAgent.capabilities,
-          reportsTo: null,
           adapterType: manifestAgent.adapterType,
           adapterConfig,
           runtimeConfig: manifestAgent.runtimeConfig,
@@ -978,6 +977,28 @@ export function companyPortabilityService(db: Db) {
           await agents.update(agentId, { reportsTo: managerId });
         } catch {
           warnings.push(`Could not assign manager ${managerSlug} for imported agent ${manifestAgent.slug}.`);
+        }
+      }
+
+      for (const manifestAgent of plan.selectedAgents) {
+        const agentId = importedSlugToAgentId.get(manifestAgent.slug);
+        if (!agentId) continue;
+
+        const currentAgent = await agents.getById(agentId);
+        if (!currentAgent || currentAgent.reportsTo) continue;
+
+        const fallbackManagerId = await agents.resolveDefaultReportsTo(
+          targetCompany.id,
+          manifestAgent.role,
+          manifestAgent.name,
+          manifestAgent.title,
+        );
+        if (!fallbackManagerId || fallbackManagerId === agentId) continue;
+
+        try {
+          await agents.update(agentId, { reportsTo: fallbackManagerId });
+        } catch {
+          warnings.push(`Could not backfill default manager for imported agent ${manifestAgent.slug}.`);
         }
       }
     }

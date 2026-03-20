@@ -37,6 +37,8 @@ export interface OrgNode {
   name: string;
   role: string;
   status: string;
+  title?: string | null;
+  flowLabel?: string | null;
   reports: OrgNode[];
 }
 

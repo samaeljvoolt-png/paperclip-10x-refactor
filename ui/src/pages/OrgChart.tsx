@@ -10,7 +10,7 @@ import { EmptyState } from "../components/EmptyState";
 import { PageSkeleton } from "../components/PageSkeleton";
 import { AgentIcon } from "../components/AgentIconPicker";
 import { Network } from "lucide-react";
-import { AGENT_ROLE_LABELS, type Agent } from "@paperclipai/shared";
+import { AGENT_ROLE_LABELS, getOrgRoleFlowLabel, type Agent } from "@paperclipai/shared";
 
 // Layout constants
 const CARD_W = 200;
@@ -26,6 +26,8 @@ interface LayoutNode {
   name: string;
   role: string;
   status: string;
+  title?: string | null;
+  flowLabel?: string | null;
   x: number;
   y: number;
   children: LayoutNode[];
@@ -63,6 +65,8 @@ function layoutTree(node: OrgNode, x: number, y: number): LayoutNode {
     name: node.name,
     role: node.role,
     status: node.status,
+    title: node.title ?? null,
+    flowLabel: node.flowLabel ?? null,
     x: x + (totalW - CARD_W) / 2,
     y,
     children: layoutChildren,
@@ -334,6 +338,20 @@ export function OrgChart() {
         </button>
       </div>
 
+      <div className="absolute top-3 left-3 z-10 max-w-[22rem] rounded-lg border border-border bg-background/90 px-3 py-2 text-xs text-muted-foreground shadow-sm backdrop-blur">
+        <div className="font-medium text-foreground">Information flow</div>
+        <div className="mt-1">
+          Executive nodes sit at the top. Functional leads coordinate execution. Operator agents
+          work the queue and report status back through their manager chain.
+        </div>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <span className="rounded-full border border-border px-2 py-0.5">{getOrgRoleFlowLabel("ceo")}</span>
+          <span className="rounded-full border border-border px-2 py-0.5">{getOrgRoleFlowLabel("cto")}</span>
+          <span className="rounded-full border border-border px-2 py-0.5">{getOrgRoleFlowLabel("engineer")}</span>
+          <span className="rounded-full border border-border px-2 py-0.5">{getOrgRoleFlowLabel("general")}</span>
+        </div>
+      </div>
+
       {/* SVG layer for edges */}
       <svg
         className="absolute inset-0 pointer-events-none"
@@ -406,6 +424,9 @@ export function OrgChart() {
                   </span>
                   <span className="text-[11px] text-muted-foreground leading-tight mt-0.5">
                     {agent?.title ?? roleLabel(node.role)}
+                  </span>
+                  <span className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70">
+                    {node.flowLabel ?? getOrgRoleFlowLabel(node.role, node.name, node.title)}
                   </span>
                   {agent && (
                     <span className="text-[10px] text-muted-foreground/60 font-mono leading-tight mt-1">

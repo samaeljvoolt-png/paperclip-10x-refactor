@@ -12,10 +12,19 @@ import {
   heartbeatRunEvents,
   heartbeatRuns,
 } from "@paperclipai/db";
-import { isUuidLike, normalizeAgentUrlKey } from "@paperclipai/shared";
+import {
+  getOrgManagerRoleCandidates,
+  getOrgManagerRoleForAgent,
+  getOrgRoleBandForAgent,
+  getOrgRoleRank,
+  getOrgRoleFlowLabel,
+  isUuidLike,
+  normalizeAgentUrlKey,
+} from "@paperclipai/shared";
 import { conflict, notFound, unprocessable } from "../errors.js";
-import { normalizeAgentPermissions } from "./agent-permissions.js";
+import { buildDefaultAgentPermissionGrants, normalizeAgentPermissions } from "./agent-permissions.js";
 import { REDACTED_EVENT_VALUE, sanitizeRecord } from "../redaction.js";
+import { accessService } from "./access.js";
 
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
@@ -62,12 +71,40 @@ interface AgentShortnameCollisionOptions {
   excludeAgentId?: string | null;
 }
 
+interface HierarchyCandidateRow {
+  id: string;
+  name: string;
+  role: string;
+  title: string | null;
+  status: string;
+  createdAt: Date;
+}
+
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function jsonEqual(left: unknown, right: unknown): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function compareHierarchyCandidates(left: HierarchyCandidateRow, right: HierarchyCandidateRow): number {
+  const bandOrder = { executive: 0, functional_lead: 1, operator: 2, support: 3 } as const;
+  const leftBand = getOrgRoleBandForAgent(left.role, left.name, left.title);
+  const rightBand = getOrgRoleBandForAgent(right.role, right.name, right.title);
+  const bandDiff = bandOrder[leftBand] - bandOrder[rightBand];
+  if (bandDiff !== 0) return bandDiff;
+  const rankDiff = getOrgRoleRank(left.role) - getOrgRoleRank(right.role);
+  if (rankDiff !== 0) return rankDiff;
+  const timeDiff = left.createdAt.getTime() - right.createdAt.getTime();
+  if (timeDiff !== 0) return timeDiff;
+  return left.name.localeCompare(right.name);
+}
+
+function candidateLooksLikeLead(candidate: HierarchyCandidateRow): boolean {
+  const title = candidate.title?.toLowerCase() ?? "";
+  const name = candidate.name.toLowerCase();
+  return title.includes("lead") || title.includes("director") || title.includes("architecture") || name === "nexus" || name === "creative director";
 }
 
 function buildConfigSnapshot(
@@ -183,6 +220,8 @@ export function deduplicateAgentName(
 }
 
 export function agentService(db: Db) {
+  const access = accessService(db);
+
   function currentUtcMonthWindow(now = new Date()) {
     const year = now.getUTCFullYear();
     const month = now.getUTCMonth();
@@ -270,6 +309,92 @@ export function agentService(db: Db) {
     }
   }
 
+  async function listHierarchyCandidates(companyId: string) {
+  const rows = await db
+      .select({
+        id: agents.id,
+        name: agents.name,
+        role: agents.role,
+        title: agents.title,
+        status: agents.status,
+        createdAt: agents.createdAt,
+      })
+      .from(agents)
+      .where(eq(agents.companyId, companyId));
+    return rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      role: row.role,
+      title: row.title,
+      status: row.status,
+      createdAt: row.createdAt,
+    }));
+  }
+
+  async function resolveDefaultReportsTo(
+    companyId: string,
+    role: string | null | undefined,
+    name?: string | null | undefined,
+    title?: string | null | undefined,
+  ) {
+    const preferredManager = getOrgManagerRoleForAgent(role, name, title);
+    const candidates = [
+      ...(preferredManager ? [preferredManager] : []),
+      ...getOrgManagerRoleCandidates(role),
+    ];
+    const uniqueCandidates = [...new Set(candidates)];
+    if (uniqueCandidates.length === 0) return null;
+
+    const hierarchyCandidates = (await listHierarchyCandidates(companyId))
+      .filter((row) => row.status !== "terminated")
+      .sort(compareHierarchyCandidates);
+
+    if (
+      role === "engineer" ||
+      role === "qa" ||
+      role === "researcher" ||
+      role === "general" ||
+      role === "devops" ||
+      role === "pm"
+    ) {
+      const leadCandidate = hierarchyCandidates.find(
+        (candidate) =>
+          candidate.role === "cto" && candidateLooksLikeLead(candidate),
+      );
+      if (leadCandidate) return leadCandidate.id;
+    }
+
+    if (role === "designer") {
+      const designLead = hierarchyCandidates.find(
+        (candidate) =>
+          candidateLooksLikeLead(candidate) &&
+          (candidate.role === "designer" || candidate.role === "cmo" || candidate.role === "cto"),
+      );
+      if (designLead) return designLead.id;
+    }
+
+    if (role === "cmo" || normalizeAgentUrlKey(name)?.includes("growth") || normalizeAgentUrlKey(title)?.includes("growth")) {
+      const marketingLead = hierarchyCandidates.find(
+        (candidate) =>
+          candidate.role === "cmo" &&
+          (candidate.name.toLowerCase() === "cmo" || candidateLooksLikeLead(candidate)),
+      );
+      if (marketingLead) return marketingLead.id;
+    }
+
+    if (normalizeAgentUrlKey(title)?.includes("finance") || normalizeAgentUrlKey(title)?.includes("budget") || normalizeAgentUrlKey(title)?.includes("pricing") || normalizeAgentUrlKey(title)?.includes("margin")) {
+      const financeLead = hierarchyCandidates.find((candidate) => candidate.role === "cfo");
+      if (financeLead) return financeLead.id;
+    }
+
+    for (const candidateRole of uniqueCandidates) {
+      const manager = hierarchyCandidates.find((row) => row.role === candidateRole);
+      if (manager) return manager.id;
+    }
+
+    return null;
+  }
+
   async function assertCompanyShortnameAvailable(
     companyId: string,
     candidateName: string,
@@ -347,6 +472,32 @@ export function agentService(db: Db) {
       .then((rows) => rows[0] ?? null);
     const normalizedUpdated = updated ? normalizeAgentRow(updated) : null;
 
+    if (normalizedUpdated) {
+      const membershipStatus =
+        normalizedUpdated.status === "terminated" ? "suspended" : "active";
+      await access.ensureMembership(
+        normalizedUpdated.companyId,
+        "agent",
+        normalizedUpdated.id,
+        "member",
+        membershipStatus,
+      );
+      await access.setPrincipalGrants(
+        normalizedUpdated.companyId,
+        "agent",
+        normalizedUpdated.id,
+        membershipStatus === "active"
+          ? buildDefaultAgentPermissionGrants(
+              normalizedUpdated.role,
+              normalizedUpdated.permissions,
+              normalizedUpdated.name,
+              normalizedUpdated.title,
+            )
+          : [],
+        null,
+      );
+    }
+
     if (normalizedUpdated && shouldRecordRevision && beforeConfig) {
       const afterConfig = buildConfigSnapshot(normalizedUpdated);
       const changedKeys = diffConfigSnapshot(beforeConfig, afterConfig);
@@ -382,8 +533,12 @@ export function agentService(db: Db) {
     getById,
 
     create: async (companyId: string, data: Omit<typeof agents.$inferInsert, "companyId">) => {
-      if (data.reportsTo) {
-        await ensureManager(companyId, data.reportsTo);
+      const role = data.role ?? "general";
+      let reportsTo = data.reportsTo;
+      if (reportsTo !== undefined && reportsTo !== null) {
+        await ensureManager(companyId, reportsTo);
+      } else if (reportsTo === undefined) {
+        reportsTo = await resolveDefaultReportsTo(companyId, role, data.name, data.title);
       }
 
       const existingAgents = await db
@@ -392,13 +547,33 @@ export function agentService(db: Db) {
         .where(eq(agents.companyId, companyId));
       const uniqueName = deduplicateAgentName(data.name, existingAgents);
 
-      const role = data.role ?? "general";
       const normalizedPermissions = normalizeAgentPermissions(data.permissions, role);
       const created = await db
         .insert(agents)
-        .values({ ...data, name: uniqueName, companyId, role, permissions: normalizedPermissions })
+        .values({
+          ...data,
+          name: uniqueName,
+          companyId,
+          role,
+          reportsTo: reportsTo ?? null,
+          permissions: normalizedPermissions,
+        })
         .returning()
         .then((rows) => rows[0]);
+
+      await access.ensureMembership(companyId, "agent", created.id, "member", "active");
+      await access.setPrincipalGrants(
+        companyId,
+        "agent",
+        created.id,
+        buildDefaultAgentPermissionGrants(
+          role,
+          normalizedPermissions,
+          created.name,
+          created.title,
+        ),
+        null,
+      );
 
       return normalizeAgentRow(created);
     },
@@ -612,6 +787,8 @@ export function agentService(db: Db) {
       return rows[0] ?? null;
     },
 
+    resolveDefaultReportsTo,
+
     orgForCompany: async (companyId: string) => {
       const rows = await db
         .select()
@@ -626,10 +803,23 @@ export function agentService(db: Db) {
         byManager.set(key, group);
       }
 
+      const sortMembers = (members: typeof normalizedRows) =>
+        [...members].sort((left, right) => {
+          const leftBand = getOrgRoleBandForAgent(left.role, left.name, left.title);
+          const rightBand = getOrgRoleBandForAgent(right.role, right.name, right.title);
+          const bandOrder = { executive: 0, functional_lead: 1, operator: 2, support: 3 } as const;
+          const bandDiff = bandOrder[leftBand] - bandOrder[rightBand];
+          if (bandDiff !== 0) return bandDiff;
+          const rankDiff = getOrgRoleRank(left.role) - getOrgRoleRank(right.role);
+          if (rankDiff !== 0) return rankDiff;
+          return left.name.localeCompare(right.name);
+        });
+
       const build = (managerId: string | null): Array<Record<string, unknown>> => {
-        const members = byManager.get(managerId) ?? [];
+        const members = sortMembers(byManager.get(managerId) ?? []);
         return members.map((member) => ({
           ...member,
+          flowLabel: getOrgRoleFlowLabel(member.role, member.name, member.title ?? null),
           reports: build(member.id),
         }));
       };

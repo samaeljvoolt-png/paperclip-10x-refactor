@@ -4,6 +4,7 @@ import { useDialog } from "../context/DialogContext";
 import { useCompany } from "../context/CompanyContext";
 import { executionWorkspacesApi } from "../api/execution-workspaces";
 import { issuesApi } from "../api/issues";
+import { promptCompilerApi } from "../api/promptCompiler";
 import { instanceSettingsApi } from "../api/instanceSettings";
 import { projectsApi } from "../api/projects";
 import { agentsApi } from "../api/agents";
@@ -18,9 +19,12 @@ import {
   currentUserAssigneeOption,
   parseAssigneeValue,
 } from "../lib/assignees";
+import type { PromptCompilerCompileResponse, PromptCompilerLanguagePreference } from "@paperclipai/shared";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,6 +56,7 @@ import { issueStatusText, issueStatusTextDefault, priorityColor, priorityColorDe
 import { MarkdownEditor, type MarkdownEditorRef, type MentionOption } from "./MarkdownEditor";
 import { AgentIcon } from "./AgentIconPicker";
 import { InlineEntitySelector, type InlineEntityOption } from "./InlineEntitySelector";
+import { PromptCompilerPanel } from "./PromptCompilerPanel";
 
 const DRAFT_KEY = "paperclip:issue-draft";
 const DEBOUNCE_MS = 800;
@@ -295,6 +300,11 @@ export function NewIssueDialog() {
   const [selectedExecutionWorkspaceId, setSelectedExecutionWorkspaceId] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [dialogCompanyId, setDialogCompanyId] = useState<string | null>(null);
+  const [issueCreationMode, setIssueCreationMode] = useState<"manual" | "compiled">("manual");
+  const [compilerRawRequest, setCompilerRawRequest] = useState("");
+  const [compilerAdditionalContext, setCompilerAdditionalContext] = useState("");
+  const [compilerPreferredLanguage, setCompilerPreferredLanguage] = useState<PromptCompilerLanguagePreference>("auto");
+  const [compiledResult, setCompiledResult] = useState<PromptCompilerCompileResponse | null>(null);
   const [stagedFiles, setStagedFiles] = useState<StagedIssueFile[]>([]);
   const [isFileDragOver, setIsFileDragOver] = useState(false);
   const draftTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -449,6 +459,83 @@ export function NewIssueDialog() {
     },
   });
 
+  const createCompiledIssue = useMutation({
+    mutationFn: async ({
+      companyId,
+      stagedFiles: pendingStagedFiles,
+      ...data
+    }: {
+      companyId: string;
+      stagedFiles: StagedIssueFile[];
+      rawRequest: string;
+      additionalContext?: string | null;
+      preferredLanguage: PromptCompilerLanguagePreference;
+      brief: PromptCompilerCompileResponse["brief"];
+      issueDraft: PromptCompilerCompileResponse["issueDraft"];
+      issue: Record<string, unknown>;
+    }) => {
+      const response = await promptCompilerApi.createIssue(companyId, data as any);
+      const issue = response.issue as { id: string; identifier?: string | null };
+      const failures: string[] = [];
+
+      for (const stagedFile of pendingStagedFiles) {
+        try {
+          if (stagedFile.kind === "document") {
+            const body = await stagedFile.file.text();
+            await issuesApi.upsertDocument(issue.id, stagedFile.documentKey ?? "document", {
+              title: stagedFile.documentKey === "plan" ? null : stagedFile.title ?? null,
+              format: "markdown",
+              body,
+              baseRevisionId: null,
+            });
+          } else {
+            await issuesApi.uploadAttachment(companyId, issue.id, stagedFile.file);
+          }
+        } catch {
+          failures.push(stagedFile.file.name);
+        }
+      }
+
+      return { issue, companyId, failures };
+    },
+    onSuccess: ({ issue, companyId, failures }) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.issues.list(companyId) });
+      if (draftTimer.current) clearTimeout(draftTimer.current);
+      if (failures.length > 0) {
+        const prefix = (companies.find((company) => company.id === companyId)?.issuePrefix ?? "").trim();
+        const issueRef = issue.identifier ?? issue.id;
+        pushToast({
+          title: `Created ${issueRef} with upload warnings`,
+          body: `${failures.length} staged ${failures.length === 1 ? "file" : "files"} could not be added.`,
+          tone: "warn",
+          action: prefix
+            ? { label: `Open ${issueRef}`, href: `/${prefix}/issues/${issueRef}` }
+            : undefined,
+        });
+      }
+      clearDraft();
+      reset();
+      closeNewIssue();
+    },
+  });
+
+  const compilePrompt = useMutation({
+    mutationFn: async (payload: {
+      companyId: string;
+      rawRequest: string;
+      additionalContext?: string;
+      preferredLanguage: PromptCompilerLanguagePreference;
+    }) =>
+      promptCompilerApi.compile(payload.companyId, {
+        rawRequest: payload.rawRequest,
+        additionalContext: payload.additionalContext || null,
+        preferredLanguage: payload.preferredLanguage,
+      }),
+    onSuccess: (result) => {
+      setCompiledResult(result);
+    },
+  });
+
   const uploadDescriptionImage = useMutation({
     mutationFn: async (file: File) => {
       if (!effectiveCompanyId) throw new Error("No company selected");
@@ -523,6 +610,11 @@ export function NewIssueDialog() {
       setAssigneeChrome(false);
       setExecutionWorkspaceMode(defaultExecutionWorkspaceModeForProject(defaultProject));
       setSelectedExecutionWorkspaceId("");
+      setIssueCreationMode("manual");
+      setCompilerRawRequest("");
+      setCompilerAdditionalContext("");
+      setCompilerPreferredLanguage("auto");
+      setCompiledResult(null);
       executionWorkspaceDefaultProjectId.current = defaultProjectId || null;
     } else if (draft && draft.title.trim()) {
       const restoredProjectId = newIssueDefaults.projectId ?? draft.projectId;
@@ -546,6 +638,11 @@ export function NewIssueDialog() {
           ?? (draft.useIsolatedExecutionWorkspace ? "isolated_workspace" : defaultExecutionWorkspaceModeForProject(restoredProject)),
       );
       setSelectedExecutionWorkspaceId(draft.selectedExecutionWorkspaceId ?? "");
+      setIssueCreationMode("manual");
+      setCompilerRawRequest("");
+      setCompilerAdditionalContext("");
+      setCompilerPreferredLanguage("auto");
+      setCompiledResult(null);
       executionWorkspaceDefaultProjectId.current = restoredProjectId || null;
     } else {
       const defaultProjectId = newIssueDefaults.projectId ?? "";
@@ -560,6 +657,11 @@ export function NewIssueDialog() {
       setAssigneeChrome(false);
       setExecutionWorkspaceMode(defaultExecutionWorkspaceModeForProject(defaultProject));
       setSelectedExecutionWorkspaceId("");
+      setIssueCreationMode("manual");
+      setCompilerRawRequest("");
+      setCompilerAdditionalContext("");
+      setCompilerPreferredLanguage("auto");
+      setCompiledResult(null);
       executionWorkspaceDefaultProjectId.current = defaultProjectId || null;
     }
   }, [newIssueOpen, newIssueDefaults, orderedProjects]);
@@ -605,6 +707,11 @@ export function NewIssueDialog() {
     setAssigneeChrome(false);
     setExecutionWorkspaceMode("shared_workspace");
     setSelectedExecutionWorkspaceId("");
+    setIssueCreationMode("manual");
+    setCompilerRawRequest("");
+    setCompilerAdditionalContext("");
+    setCompilerPreferredLanguage("auto");
+    setCompiledResult(null);
     setExpanded(false);
     setDialogCompanyId(null);
     setStagedFiles([]);
@@ -633,7 +740,7 @@ export function NewIssueDialog() {
   }
 
   function handleSubmit() {
-    if (!effectiveCompanyId || !title.trim() || createIssue.isPending) return;
+    if (!effectiveCompanyId || !title.trim() || createIssue.isPending || createCompiledIssue.isPending) return;
     const assigneeAdapterOverrides = buildAssigneeAdapterOverrides({
       adapterType: assigneeAdapterType,
       modelOverride: assigneeModelOverride,
@@ -655,9 +762,7 @@ export function NewIssueDialog() {
     const executionWorkspaceSettings = executionWorkspacePolicy?.enabled
       ? { mode: requestedExecutionWorkspaceMode }
       : null;
-    createIssue.mutate({
-      companyId: effectiveCompanyId,
-      stagedFiles,
+    const issuePayload = {
       title: title.trim(),
       description: description.trim() || undefined,
       status,
@@ -672,6 +777,26 @@ export function NewIssueDialog() {
         ? { executionWorkspaceId: selectedExecutionWorkspaceId }
         : {}),
       ...(executionWorkspaceSettings ? { executionWorkspaceSettings } : {}),
+    };
+
+    if (issueCreationMode === "compiled" && compiledResult) {
+      createCompiledIssue.mutate({
+        companyId: effectiveCompanyId,
+        stagedFiles,
+        rawRequest: compilerRawRequest,
+        additionalContext: compilerAdditionalContext || null,
+        preferredLanguage: compilerPreferredLanguage,
+        brief: compiledResult.brief,
+        issueDraft: compiledResult.issueDraft,
+        issue: issuePayload,
+      });
+      return;
+    }
+
+    createIssue.mutate({
+      companyId: effectiveCompanyId,
+      stagedFiles,
+      ...issuePayload,
     });
   }
 
@@ -813,10 +938,28 @@ export function NewIssueDialog() {
   const savedDraft = loadDraft();
   const hasSavedDraft = Boolean(savedDraft?.title.trim() || savedDraft?.description.trim());
   const canDiscardDraft = hasDraft || hasSavedDraft;
+  const isSubmitting = createIssue.isPending || createCompiledIssue.isPending;
   const createIssueErrorMessage =
-    createIssue.error instanceof Error ? createIssue.error.message : "Failed to create issue. Try again.";
+    createIssue.error instanceof Error
+      ? createIssue.error.message
+      : createCompiledIssue.error instanceof Error
+        ? createCompiledIssue.error.message
+        : "Failed to create issue. Try again.";
   const stagedDocuments = stagedFiles.filter((file) => file.kind === "document");
   const stagedAttachments = stagedFiles.filter((file) => file.kind === "attachment");
+
+  function applyCompiledBrief() {
+    if (!compiledResult) return;
+    setTitle(compiledResult.issueDraft.title);
+    setDescription(compiledResult.issueDraft.description);
+    if (compiledResult.issueDraft.suggestedAssigneeAgentId) {
+      setAssigneeValue(
+        assigneeValueFromSelection({
+          assigneeAgentId: compiledResult.issueDraft.suggestedAssigneeAgentId,
+        }),
+      );
+    }
+  }
 
   const handleProjectChange = useCallback((nextProjectId: string) => {
     setProjectId(nextProjectId);
@@ -861,7 +1004,7 @@ export function NewIssueDialog() {
     <Dialog
       open={newIssueOpen}
       onOpenChange={(open) => {
-        if (!open && !createIssue.isPending) closeNewIssue();
+        if (!open && !isSubmitting) closeNewIssue();
       }}
     >
       <DialogContent
@@ -875,12 +1018,12 @@ export function NewIssueDialog() {
         )}
         onKeyDown={handleKeyDown}
         onEscapeKeyDown={(event) => {
-          if (createIssue.isPending) {
+          if (isSubmitting) {
             event.preventDefault();
           }
         }}
         onPointerDownOutside={(event) => {
-          if (createIssue.isPending) {
+          if (isSubmitting) {
             event.preventDefault();
             return;
           }
@@ -896,6 +1039,10 @@ export function NewIssueDialog() {
           }
         }}
       >
+        <DialogTitle className="sr-only">New issue</DialogTitle>
+        <DialogDescription className="sr-only">
+          Create a new issue manually or compile a structured brief from a raw request.
+        </DialogDescription>
         {/* Header bar */}
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-border shrink-0">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -961,7 +1108,7 @@ export function NewIssueDialog() {
               size="icon-xs"
               className="text-muted-foreground"
               onClick={() => setExpanded(!expanded)}
-              disabled={createIssue.isPending}
+              disabled={isSubmitting}
             >
               {expanded ? <Minimize2 className="h-3.5 w-3.5" /> : <Maximize2 className="h-3.5 w-3.5" />}
             </Button>
@@ -970,12 +1117,61 @@ export function NewIssueDialog() {
               size="icon-xs"
               className="text-muted-foreground"
               onClick={() => closeNewIssue()}
-              disabled={createIssue.isPending}
+              disabled={isSubmitting}
             >
               <span className="text-lg leading-none">&times;</span>
             </Button>
           </div>
         </div>
+
+        <div className="px-4 pt-2 shrink-0">
+          <div className="inline-flex items-center gap-1 rounded-md border border-border p-1">
+            <button
+              className={cn(
+                "rounded px-2 py-1 text-xs transition-colors",
+                issueCreationMode === "manual" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50",
+              )}
+              onClick={() => setIssueCreationMode("manual")}
+              disabled={isSubmitting || compilePrompt.isPending}
+            >
+              Manual
+            </button>
+            <button
+              className={cn(
+                "rounded px-2 py-1 text-xs transition-colors",
+                issueCreationMode === "compiled" ? "bg-accent text-foreground" : "text-muted-foreground hover:bg-accent/50",
+              )}
+              onClick={() => setIssueCreationMode("compiled")}
+              disabled={isSubmitting || compilePrompt.isPending}
+            >
+              Compiler
+            </button>
+          </div>
+        </div>
+
+        {issueCreationMode === "compiled" ? (
+          <PromptCompilerPanel
+            rawRequest={compilerRawRequest}
+            additionalContext={compilerAdditionalContext}
+            preferredLanguage={compilerPreferredLanguage}
+            compiled={compiledResult}
+            isCompiling={compilePrompt.isPending}
+            disabled={isSubmitting}
+            onRawRequestChange={setCompilerRawRequest}
+            onAdditionalContextChange={setCompilerAdditionalContext}
+            onPreferredLanguageChange={setCompilerPreferredLanguage}
+            onCompile={() => {
+              if (!effectiveCompanyId || !compilerRawRequest.trim()) return;
+              compilePrompt.mutate({
+                companyId: effectiveCompanyId,
+                rawRequest: compilerRawRequest,
+                additionalContext: compilerAdditionalContext,
+                preferredLanguage: compilerPreferredLanguage,
+              });
+            }}
+            onApply={applyCompiledBrief}
+          />
+        ) : null}
 
         {/* Title */}
         <div className="px-4 pt-4 pb-2 shrink-0">
@@ -989,7 +1185,7 @@ export function NewIssueDialog() {
               e.target.style.height = "auto";
               e.target.style.height = `${e.target.scrollHeight}px`;
             }}
-            readOnly={createIssue.isPending}
+            readOnly={isSubmitting}
             onKeyDown={(e) => {
               if (
                 e.key === "Enter" &&
@@ -1283,7 +1479,7 @@ export function NewIssueDialog() {
                           size="icon-xs"
                           className="shrink-0 text-muted-foreground"
                           onClick={() => removeStagedFile(file.id)}
-                          disabled={createIssue.isPending}
+                          disabled={isSubmitting}
                           title="Remove document"
                         >
                           <X className="h-3.5 w-3.5" />
@@ -1314,7 +1510,7 @@ export function NewIssueDialog() {
                           size="icon-xs"
                           className="shrink-0 text-muted-foreground"
                           onClick={() => removeStagedFile(file.id)}
-                          disabled={createIssue.isPending}
+                          disabled={isSubmitting}
                           title="Remove attachment"
                         >
                           <X className="h-3.5 w-3.5" />
@@ -1406,7 +1602,7 @@ export function NewIssueDialog() {
           <button
             className="inline-flex items-center gap-1.5 rounded-md border border-border px-2 py-1 text-xs hover:bg-accent/50 transition-colors text-muted-foreground"
             onClick={() => stageFileInputRef.current?.click()}
-            disabled={createIssue.isPending}
+            disabled={isSubmitting}
           >
             <Paperclip className="h-3 w-3" />
             Upload
@@ -1434,36 +1630,40 @@ export function NewIssueDialog() {
 
         {/* Footer */}
         <div className="flex items-center justify-between px-4 py-2.5 border-t border-border shrink-0">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground"
-            onClick={discardDraft}
-            disabled={createIssue.isPending || !canDiscardDraft}
-          >
-            Discard Draft
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-muted-foreground"
+              onClick={discardDraft}
+              disabled={isSubmitting || !canDiscardDraft}
+            >
+              Discard Draft
+            </Button>
           <div className="flex items-center gap-3">
             <div className="min-h-5 text-right">
-              {createIssue.isPending ? (
+              {isSubmitting ? (
                 <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                   <Loader2 className="h-3 w-3 animate-spin" />
                   Creating issue...
                 </span>
-              ) : createIssue.isError ? (
+              ) : createIssue.isError || createCompiledIssue.isError ? (
                 <span className="text-xs text-destructive">{createIssueErrorMessage}</span>
               ) : null}
             </div>
             <Button
               size="sm"
               className="min-w-[8.5rem] disabled:opacity-100"
-              disabled={!title.trim() || createIssue.isPending}
+              disabled={
+                !title.trim() ||
+                isSubmitting ||
+                (issueCreationMode === "compiled" && (!compiledResult || compiledResult.validation.gateStatus === "reject"))
+              }
               onClick={handleSubmit}
-              aria-busy={createIssue.isPending}
+              aria-busy={isSubmitting}
             >
               <span className="inline-flex items-center justify-center gap-1.5">
-                {createIssue.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                <span>{createIssue.isPending ? "Creating..." : "Create Issue"}</span>
+                {isSubmitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
+                <span>{isSubmitting ? "Creating..." : "Create Issue"}</span>
               </span>
             </Button>
           </div>

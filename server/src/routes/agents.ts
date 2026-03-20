@@ -406,6 +406,8 @@ export function agentRoutes(db: Db) {
       name: String(node.name),
       role: String(node.role),
       status: String(node.status),
+      title: typeof node.title === "string" || node.title === null ? node.title : null,
+      flowLabel: typeof node.flowLabel === "string" ? node.flowLabel : null,
       reports,
     };
   }

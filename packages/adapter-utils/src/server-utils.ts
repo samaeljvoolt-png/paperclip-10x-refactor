@@ -138,6 +138,22 @@ type PaperclipAgentIdentity = {
   role?: string | null;
 };
 
+export type PaperclipClaimIdentity = {
+  agentId: string;
+  companyId: string;
+  agentName: string | null;
+  agentRole: string | null;
+  agentSlug: string;
+  agentKind: "supervisor" | "executor";
+  claimFilePath: string;
+};
+
+function resolvePaperclipClaimsRoot() {
+  const home = process.env.HOME?.trim();
+  if (home) return path.join(home, ".openclaw", "workspace", "claims");
+  return "~/.openclaw/workspace/claims";
+}
+
 function normalizeAgentUrlKey(value: string | null | undefined): string | null {
   if (typeof value !== "string") return null;
   const normalized = value
@@ -166,24 +182,44 @@ function resolvePaperclipAgentKind(agent: PaperclipAgentIdentity): "supervisor" 
   return "executor";
 }
 
+export function buildPaperclipClaimIdentity(agent: PaperclipAgentIdentity): PaperclipClaimIdentity {
+  const agentSlug = resolvePaperclipAgentSlug(agent);
+  const agentKind = resolvePaperclipAgentKind(agent);
+  const normalizedRole = normalizeAgentUrlKey(agent.role);
+  return {
+    agentId: agent.id,
+    companyId: agent.companyId,
+    agentName: agent.name?.trim() ? agent.name.trim() : null,
+    agentRole: normalizedRole,
+    agentSlug,
+    agentKind,
+    claimFilePath: path.join(resolvePaperclipClaimsRoot(), `${agentSlug}.json`),
+  };
+}
+
 export function buildPaperclipClaimFilePath(agent: PaperclipAgentIdentity): string {
-  return `~/.openclaw/workspace/claims/${resolvePaperclipAgentSlug(agent)}.json`;
+  return buildPaperclipClaimIdentity(agent).claimFilePath;
 }
 
 export function buildPaperclipEnv(agent: PaperclipAgentIdentity): Record<string, string> {
+  const normalizeApiUrl = (value: string): string => value.replace(/\/+$/, "");
   const resolveHostForUrl = (rawHost: string): string => {
     const host = rawHost.trim();
     if (!host || host === "0.0.0.0" || host === "::") return "localhost";
     if (host.includes(":") && !host.startsWith("[") && !host.endsWith("]")) return `[${host}]`;
     return host;
   };
-  const claimFilePath = buildPaperclipClaimFilePath(agent);
+  const claimIdentity = buildPaperclipClaimIdentity(agent);
   const vars: Record<string, string> = {
-    PAPERCLIP_AGENT_ID: agent.id,
-    PAPERCLIP_COMPANY_ID: agent.companyId,
-    PAPERCLIP_AGENT_KIND: resolvePaperclipAgentKind(agent),
-    PAPERCLIP_AGENT_SLUG: resolvePaperclipAgentSlug(agent),
-    PAPERCLIP_CLAIM_FILE: claimFilePath,
+    PAPERCLIP_AGENT_ID: claimIdentity.agentId,
+    PAPERCLIP_COMPANY_ID: claimIdentity.companyId,
+    PAPERCLIP_AGENT_KIND: claimIdentity.agentKind,
+    PAPERCLIP_AGENT_SLUG: claimIdentity.agentSlug,
+    PAPERCLIP_CLAIM_FILE: claimIdentity.claimFilePath,
+    PAPERCLIP_EXPECTED_CLAIM_AGENT_ID: claimIdentity.agentId,
+    PAPERCLIP_EXPECTED_CLAIM_COMPANY_ID: claimIdentity.companyId,
+    PAPERCLIP_EXPECTED_CLAIM_ROLE: claimIdentity.agentRole ?? "",
+    PAPERCLIP_EXPECTED_CLAIM_FILE: claimIdentity.claimFilePath,
   };
   const normalizedRole = normalizeAgentUrlKey(agent.role);
   if (normalizedRole) {
@@ -196,7 +232,9 @@ export function buildPaperclipEnv(agent: PaperclipAgentIdentity): Record<string,
     process.env.PAPERCLIP_LISTEN_HOST ?? process.env.HOST ?? "localhost",
   );
   const runtimePort = process.env.PAPERCLIP_LISTEN_PORT ?? process.env.PORT ?? "3100";
-  const apiUrl = process.env.PAPERCLIP_API_URL ?? `http://${runtimeHost}:${runtimePort}`;
+  const apiUrl = normalizeApiUrl(
+    process.env.PAPERCLIP_API_URL ?? `http://${runtimeHost}:${runtimePort}`,
+  );
   vars.PAPERCLIP_API_URL = apiUrl;
   return vars;
 }

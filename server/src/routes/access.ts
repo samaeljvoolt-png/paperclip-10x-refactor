@@ -61,8 +61,9 @@ import {
   summarizeOpenClawGatewayDefaultsForLog as onboardingSummarizeOpenClawGatewayDefaultsForLog,
   toInviteSummaryResponse as onboardingToInviteSummaryResponse
 } from "./access-onboarding.js";
-import { listAvailableSkills, readSkillMarkdown } from "./access-skills.js";
+import { listAvailableSkills, listPaperclipManagedSkills, readSkillMarkdown } from "./access-skills.js";
 import { buildPublicUrl, requestBaseUrl } from "../utils/public-url.js";
+import { buildPaperclipClaimIdentity } from "@paperclipai/adapter-utils/server-utils";
 
 export {
   onboardingBuildInviteOnboardingManifest as buildInviteOnboardingManifest,
@@ -97,6 +98,31 @@ function createInviteToken() {
 
 function createClaimSecret() {
   return `pcp_claim_${randomBytes(24).toString("hex")}`;
+}
+
+export function buildOpenClawClaimApiKeyResponse(input: {
+  agent: { id: string; companyId: string; name: string; role: string };
+  key: { id: string; token: string; createdAt: Date };
+}) {
+  const claimIdentity = buildPaperclipClaimIdentity({
+    id: input.agent.id,
+    companyId: input.agent.companyId,
+    name: input.agent.name,
+    role: input.agent.role,
+  });
+  return {
+    keyId: input.key.id,
+    token: input.key.token,
+    createdAt: input.key.createdAt,
+    agentId: claimIdentity.agentId,
+    companyId: claimIdentity.companyId,
+    agentName: claimIdentity.agentName,
+    agentRole: claimIdentity.agentRole,
+    agentSlug: claimIdentity.agentSlug,
+    agentKind: claimIdentity.agentKind,
+    claimFilePath: claimIdentity.claimFilePath,
+    claimIdentity,
+  };
 }
 
 export function companyInviteExpiresAt(nowMs: number = Date.now()) {
@@ -479,7 +505,7 @@ function buildInviteOnboardingManifest(
     invite: onboardingToInviteSummaryResponse(req, token, invite),
     onboarding: {
       instructions:
-        "Join as an OpenClaw Gateway agent, save your one-time claim secret, wait for board approval, then claim your API key. Save the claim response token to ~/.openclaw/workspace/claims/<agent-slug>.json and load PAPERCLIP_API_KEY from that file before starting heartbeat loops. Use one file per agent; do not reuse a shared claim file. You MUST submit adapterType='openclaw_gateway', set agentDefaultsPayload.url to your ws:// or wss:// OpenClaw gateway endpoint, and include agentDefaultsPayload.headers.x-openclaw-token (or legacy x-openclaw-auth).",
+        "Join as an OpenClaw Gateway agent, save your one-time claim secret, wait for board approval, then claim your API key. Save the full claim response JSON to ~/.openclaw/workspace/claims/<agent-slug>.json and load PAPERCLIP_API_KEY from that file before starting heartbeat loops. Validate that claimIdentity.agentId, claimIdentity.companyId, claimIdentity.agentRole, and claimIdentity.claimFilePath match the current agent before starting the run. Use one file per agent; do not reuse a shared claim file. You MUST submit adapterType='openclaw_gateway', set agentDefaultsPayload.url to your ws:// or wss:// OpenClaw gateway endpoint, and include agentDefaultsPayload.headers.x-openclaw-token (or legacy x-openclaw-auth).",
       inviteMessage: extractInviteMessage(invite),
       recommendedAdapterType: "openclaw_gateway",
       requiredFields: {
@@ -906,17 +932,10 @@ export function accessRoutes(
 
   router.get("/skills/index", (_req, res) => {
     res.json({
-      skills: [
-        { name: "paperclip", path: "/api/skills/paperclip" },
-        {
-          name: "para-memory-files",
-          path: "/api/skills/para-memory-files"
-        },
-        {
-          name: "paperclip-create-agent",
-          path: "/api/skills/paperclip-create-agent"
-        }
-      ]
+      skills: listPaperclipManagedSkills().map((skill) => ({
+        name: skill.name,
+        path: `/api/skills/${skill.name}`,
+      })),
     });
   });
 
@@ -1812,6 +1831,8 @@ export function accessRoutes(
         joinRequest.createdAgentId,
         "initial-join-key"
       );
+      const claimedAgent = await agents.getById(joinRequest.createdAgentId);
+      if (!claimedAgent) throw notFound("Claimed agent not found");
 
       await logActivity(db, {
         companyId: joinRequest.companyId,
@@ -1826,12 +1847,12 @@ export function accessRoutes(
         }
       });
 
-      res.status(201).json({
-        keyId: created.id,
-        token: created.token,
-        agentId: joinRequest.createdAgentId,
-        createdAt: created.createdAt
-      });
+      res.status(201).json(
+        buildOpenClawClaimApiKeyResponse({
+          agent: claimedAgent,
+          key: created,
+        }),
+      );
     }
   );
 

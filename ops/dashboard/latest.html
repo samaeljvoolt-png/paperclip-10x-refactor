@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Paperclip Oracle Health Dashboard</title>
+  <style>
+    :root {
+      --bg: #09111f;
+      --panel: #111c31;
+      --panel-alt: #15233d;
+      --text: #edf3ff;
+      --muted: #9fb0cf;
+      --ok: #3ddc97;
+      --warn: #ffbf69;
+      --bad: #ff6b6b;
+      --line: #233252;
+      --accent: #79b8ff;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: linear-gradient(180deg, #08101d 0%, #0d1730 100%); color: var(--text); }
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 32px 20px 48px; }
+    h1, h2 { margin: 0 0 12px; }
+    p, li { color: var(--muted); }
+    .meta { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0 24px; }
+    .chip { border: 1px solid var(--line); background: rgba(255,255,255,0.03); color: var(--text); border-radius: 999px; padding: 8px 12px; font-size: 13px; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.18); }
+    .card strong { display: block; font-size: 28px; margin-top: 4px; }
+    .section { margin-top: 18px; background: var(--panel-alt); border: 1px solid var(--line); border-radius: 18px; padding: 18px; }
+    .status-ok { color: var(--ok); }
+    .status-warn { color: var(--warn); }
+    .status-bad { color: var(--bad); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { color: var(--accent); font-weight: 700; }
+    pre { white-space: pre-wrap; background: #09111f; border: 1px solid var(--line); border-radius: 14px; padding: 14px; color: #dce8ff; overflow: auto; }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 960px) { .grid, .two { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Paperclip Oracle Health Dashboard</h1>
+    <p>Operational snapshot for the live company. Generated automatically from the Oracle instance and watchdog output.</p>
+    <div class="meta">
+      <div class="chip">Generated: 2026-03-20T06:08:49.622Z</div>
+      <div class="chip">API: http://127.0.0.1:3100</div>
+      <div class="chip">Company: 05100f6d-b0a4-4a15-b785-61949b90c6df</div>
+      <div class="chip status-ok">Health: ok</div>
+      <div class="chip">Mode: local_trusted</div>
+      <div class="chip">Bootstrap: ready</div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><span>Total issues</span><strong>77</strong></div>
+      <div class="card"><span>Active / blocked / with run</span><strong>12</strong></div>
+      <div class="card"><span>Blocked issues</span><strong class="status-warn">2</strong></div>
+      <div class="card"><span>Stale in progress (30m+)</span><strong class="status-bad">12</strong></div>
+    </div>
+
+    <div class="section">
+      <h2>Status Distribution</h2>
+      <pre>{
+  &quot;backlog&quot;: 9,
+  &quot;blocked&quot;: 2,
+  &quot;done&quot;: 33,
+  &quot;in_progress&quot;: 22,
+  &quot;todo&quot;: 11
+}</pre>
+    </div>
+
+    <div class="two">
+      <div class="section">
+        <h2>Active Issues</h2>
+        <table><thead><tr><th>Issue</th><th>Status</th><th>Age (m)</th><th>Run</th></tr></thead><tbody><tr><td>ALQ-47</td><td>in_progress</td><td>1</td><td>da1294ac-d5ad-4213-a2af-9a1bb56a3590</td></tr><tr><td>ALQ-3</td><td>done</td><td>4</td><td>56ca8b86-437e-4319-85f5-79257808340b</td></tr><tr><td>ALQ-72</td><td>in_progress</td><td>7</td><td></td></tr><tr><td>ALQ-74</td><td>in_progress</td><td>10</td><td></td></tr><tr><td>ALQ-71</td><td>in_progress</td><td>12</td><td></td></tr><tr><td>ALQ-73</td><td>todo</td><td>13</td><td>674a1003-31b6-4f6b-8996-fb3eef634e39</td></tr><tr><td>ALQ-70</td><td>in_progress</td><td>13</td><td>51f81b18-7c8c-4d4f-8a53-f378d55ae73b</td></tr><tr><td>ALQ-68</td><td>in_progress</td><td>15</td><td></td></tr><tr><td>ALQ-67</td><td>in_progress</td><td>16</td><td></td></tr><tr><td>ALQ-65</td><td>in_progress</td><td>18</td><td></td></tr><tr><td>ALQ-61</td><td>in_progress</td><td>31</td><td></td></tr><tr><td>ALQ-60</td><td>in_progress</td><td>33</td><td></td></tr></tbody></table>
+      </div>
+      <div class="section">
+        <h2>Queued With Run ID</h2>
+        <table><thead><tr><th>Issue</th><th>Status</th><th>Age (m)</th><th>Run</th></tr></thead><tbody><tr><td>ALQ-73</td><td>todo</td><td>13</td><td>674a1003-31b6-4f6b-8996-fb3eef634e39</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <div class="two">
+      <div class="section">
+        <h2>Blocked Issues</h2>
+        <table><thead><tr><th>Issue</th><th>Title</th><th>Age (m)</th></tr></thead><tbody><tr><td>ALQ-58</td><td>Format research into concise markdown/HTML brief</td><td>43</td></tr><tr><td>ALQ-51</td><td>Technical audit: performance, accessibility, responsive, security smells</td><td>122</td></tr></tbody></table>
+      </div>
+      <div class="section">
+        <h2>Stale In Progress</h2>
+        <table><thead><tr><th>Issue</th><th>Title</th><th>Age (m)</th></tr></thead><tbody><tr><td>ALQ-61</td><td>CTO delegation smoke after live permission fix v2</td><td>31</td></tr><tr><td>ALQ-60</td><td>CTO delegation smoke after role-based assign fix</td><td>33</td></tr><tr><td>ALQ-52</td><td>UI/UX and navigation audit: user flows, homepage, main nav</td><td>59</td></tr><tr><td>ALQ-49</td><td>Research current LLM benchmarking tools and approaches</td><td>61</td></tr><tr><td>ALQ-48</td><td>Format research brief as markdown/HTML deliverable</td><td>63</td></tr><tr><td>ALQ-46</td><td>Audit academy.alquim-ia.cloud and deliver an HTML findings report</td><td>66</td></tr><tr><td>ALQ-50</td><td>Content and SEO audit: clarity, broken links, SEO basics</td><td>121</td></tr><tr><td>ALQ-45</td><td>Research current model benchmarking approaches and tools</td><td>128</td></tr><tr><td>ALQ-44</td><td>Build a minimal model benchmark sandbox web app</td><td>129</td></tr><tr><td>ALQ-42</td><td>Technical orchestration battery: CTO 4-lane delegation smoke</td><td>149</td></tr><tr><td>ALQ-34</td><td>Wide orchestration battery: 7-lane real delegation smoke</td><td>155</td></tr><tr><td>ALQ-27</td><td>Orchestration smoke: delegated lanes battery v2</td><td>169</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Watchdog</h2>
+      <p>Latest watchdog log: none</p>
+      <p class="status-warn">Complete: false</p>
+      <pre>No watchdog log available</pre>
+    </div>
+  </div>
+</body>
+</html>

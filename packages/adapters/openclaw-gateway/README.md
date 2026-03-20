@@ -61,6 +61,11 @@ Paperclip now treats claim storage as **one file per agent**.
 
 - claim file path is derived from the agent slug:
   - `~/.openclaw/workspace/claims/<agent-slug>.json`
+- the saved claim JSON should be validated before launch:
+  - `claimIdentity.agentId`
+  - `claimIdentity.companyId`
+  - `claimIdentity.agentRole`
+  - `claimIdentity.claimFilePath`
 - supervisors use the reserved classes:
   - `ceo`
   - `cto`

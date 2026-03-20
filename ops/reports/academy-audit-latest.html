@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>academy.alquim-ia.cloud Audit Report</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #121a30;
+        --panel-2: #18213d;
+        --text: #edf2ff;
+        --muted: #9fb0d1;
+        --border: #2a355c;
+        --critical: #ff5a7a;
+        --high: #ff8a4c;
+        --medium: #ffd166;
+        --low: #6ee7b7;
+        --link: #8cb4ff;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(180deg, #0b1020 0%, #10172b 100%);
+        color: var(--text);
+      }
+      .wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+      }
+      .hero, .panel {
+        background: rgba(18, 26, 48, 0.92);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        padding: 24px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+      }
+      h1, h2, h3 { line-height: 1.2; margin: 0 0 12px; }
+      h1 { font-size: 34px; }
+      h2 { font-size: 24px; margin-top: 8px; }
+      h3 { font-size: 18px; }
+      p, li { color: var(--muted); }
+      a { color: var(--link); }
+      .meta, .badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        font-size: 13px;
+      }
+      .severity {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+      .critical { background: rgba(255, 90, 122, 0.15); color: var(--critical); }
+      .high { background: rgba(255, 138, 76, 0.15); color: var(--high); }
+      .medium { background: rgba(255, 209, 102, 0.15); color: var(--medium); }
+      .low { background: rgba(110, 231, 183, 0.15); color: var(--low); }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 14px;
+      }
+      th, td {
+        text-align: left;
+        padding: 12px 10px;
+        border-bottom: 1px solid var(--border);
+        vertical-align: top;
+      }
+      th { color: var(--text); font-size: 13px; }
+      code {
+        background: #0b1020;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 2px 6px;
+        color: #d8e4ff;
+      }
+      .finding + .finding { margin-top: 18px; }
+      .finding {
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 18px;
+        background: rgba(24, 33, 61, 0.45);
+      }
+      ul { margin: 10px 0 0 20px; }
+      .small { font-size: 13px; color: var(--muted); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <section class="hero">
+        <h1>academy.alquim-ia.cloud Audit Report</h1>
+        <p>
+          Real browser and HTTP audit of the public site at
+          <a href="https://academy.alquim-ia.cloud/">academy.alquim-ia.cloud</a>.
+          This report only includes findings backed by direct observation on March 20, 2026.
+        </p>
+        <div class="meta">
+          <span class="chip">Audited at: 2026-03-20</span>
+          <span class="chip">Scope: homepage, navigation, key routes, newsletter surface, HTTP headers, SEO basics</span>
+          <span class="chip">Method: live browser + curl header/content checks</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Executive Summary</h2>
+        <p>
+          The site is usable, fast to understand, and structurally coherent. Core routes sampled during the audit responded with <code>200</code>,
+          HTTPS is active, the homepage messaging is strong, and the mobile header/nav pattern exists.
+        </p>
+        <p>
+          The main risks are operational rather than cosmetic:
+          missing response hardening headers, broken SEO infrastructure for <code>robots.txt</code> and <code>sitemap.xml</code>,
+          and a very large brand image that creates avoidable performance cost. Metadata is also incomplete for richer search/social previews.
+        </p>
+        <div class="badges">
+          <span class="severity high">Overall: Needs remediation before strong public scale-up</span>
+          <span class="severity high">3 High findings</span>
+          <span class="severity medium">1 Medium finding</span>
+          <span class="severity low">No critical browser-breaking defect observed</span>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Coverage Executed</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Area</th>
+              <th>What was tested</th>
+              <th>Observed result</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Homepage</td>
+              <td>Hero, CTA set, featured routes, newsletter section, footer</td>
+              <td>Loaded correctly</td>
+            </tr>
+            <tr>
+              <td>Navigation</td>
+              <td>Desktop nav links and mobile header presence</td>
+              <td>Present and discoverable</td>
+            </tr>
+            <tr>
+              <td>Key routes</td>
+              <td><code>/</code>, <code>/empezar/</code>, <code>/blog/</code>, <code>/politica-tratamiento-datos/</code></td>
+              <td>All sampled routes returned <code>200</code></td>
+            </tr>
+            <tr>
+              <td>Newsletter surface</td>
+              <td>Form presence, required fields, consent checkboxes, action target</td>
+              <td>Form exists; empty state is invalid client-side</td>
+            </tr>
+            <tr>
+              <td>SEO basics</td>
+              <td>Title, description, canonical/social metadata, robots, sitemap</td>
+              <td>Title/description present; robots and sitemap broken</td>
+            </tr>
+            <tr>
+              <td>Security headers</td>
+              <td>Homepage response headers</td>
+              <td>Only baseline headers observed; hardening headers absent</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Findings</h2>
+
+        <article class="finding">
+          <h3><span class="severity high">High</span> Missing security response headers on public pages</h3>
+          <p>
+            The homepage response exposes only baseline headers:
+            <code>Content-Type</code>, <code>Content-Length</code>, <code>ETag</code>, and standard server metadata.
+            No <code>Content-Security-Policy</code>, <code>X-Frame-Options</code>, <code>X-Content-Type-Options</code>,
+            <code>Referrer-Policy</code>, or <code>Permissions-Policy</code> were observed.
+          </p>
+          <ul>
+            <li>Repro: <code>curl -sI https://academy.alquim-ia.cloud/</code></li>
+            <li>Impact: weaker client-side hardening and poorer baseline protection against framing, content sniffing, and policy drift</li>
+            <li>Fix: add a hardened Nginx response header policy and validate it in CI with a simple header smoke check</li>
+          </ul>
+        </article>
+
+        <article class="finding">
+          <h3><span class="severity high">High</span> <code>robots.txt</code> and <code>sitemap.xml</code> are misconfigured</h3>
+          <p>
+            Both URLs return the homepage HTML with <code>200 OK</code> instead of crawler-specific content.
+            That is a direct indexing defect, not a content preference issue.
+          </p>
+          <ul>
+            <li>Repro: open <code>https://academy.alquim-ia.cloud/robots.txt</code> and <code>/sitemap.xml</code></li>
+            <li>Observed: both return the homepage document starting with <code>&lt;!doctype html&gt;</code></li>
+            <li>Impact: search engines and tooling do not receive valid crawl instructions or sitemap discovery</li>
+            <li>Fix: publish a real <code>robots.txt</code> and valid XML sitemap from the static build or Nginx layer</li>
+          </ul>
+        </article>
+
+        <article class="finding">
+          <h3><span class="severity high">High</span> Brand image payload is oversized</h3>
+          <p>
+            The homepage logo/brand asset at <code>/assets/alquim-ia-brand.png</code> is served at
+            <code>4,501,872</code> bytes. That is too large for a brand mark and creates unnecessary page weight.
+          </p>
+          <ul>
+            <li>Repro: <code>curl -sI https://academy.alquim-ia.cloud/assets/alquim-ia-brand.png</code></li>
+            <li>Impact: slower first render, worse mobile performance, and wasteful bandwidth</li>
+            <li>Fix: export responsive image variants, compress aggressively, and prefer a much smaller web-optimized asset</li>
+          </ul>
+        </article>
+
+        <article class="finding">
+          <h3><span class="severity medium">Medium</span> Metadata coverage is incomplete for SEO and social distribution</h3>
+          <p>
+            The homepage includes a title and description, but the sampled markup did not expose a canonical URL,
+            Open Graph tags, Twitter card tags, or visible structured data.
+          </p>
+          <ul>
+            <li>Repro: inspect homepage source for <code>canonical</code>, <code>og:</code>, <code>twitter:</code>, <code>application/ld+json</code></li>
+            <li>Impact: weaker search canonicalization and reduced quality of social/link previews</li>
+            <li>Fix: add canonical, OG, Twitter, and structured data at least on homepage, hubs, and cornerstone content pages</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="panel">
+        <h2>Positive Signals</h2>
+        <ul>
+          <li>Homepage messaging is specific and differentiated. It does not read like generic AI content filler.</li>
+          <li>Desktop and mobile navigation patterns are present and discoverable.</li>
+          <li>The newsletter form includes explicit consent checkboxes and links to data handling policy.</li>
+          <li>Sampled routes returned <code>200</code> and the site is consistently served over HTTPS.</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>Residual Risks and Limits</h2>
+        <ul>
+          <li>No authenticated/private flows were tested.</li>
+          <li>No full Lighthouse trace was run in this pass.</li>
+          <li>No real newsletter submission was executed, to avoid polluting production data.</li>
+          <li>This report focuses on verifiable findings only; it does not claim issues that were not directly observed.</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>Recommended Next Fix Order</h2>
+        <ol>
+          <li>Publish correct <code>robots.txt</code> and <code>sitemap.xml</code>.</li>
+          <li>Add response hardening headers at Nginx.</li>
+          <li>Replace the oversized brand image with optimized web assets.</li>
+          <li>Add canonical, Open Graph, Twitter, and structured data coverage.</li>
+        </ol>
+      </section>
+
+      <p class="small">
+        Report path is intended to be persisted as a verifiable artifact, not just referenced in comments.
+      </p>
+    </div>
+  </body>
+</html>

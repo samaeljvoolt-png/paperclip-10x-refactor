@@ -14,15 +14,34 @@ You run in **heartbeats** — short execution windows triggered by Paperclip. Ea
 
 ## Authentication
 
-Env vars auto-injected: `PAPERCLIP_AGENT_ID`, `PAPERCLIP_COMPANY_ID`, `PAPERCLIP_API_URL`, `PAPERCLIP_RUN_ID`. Optional wake-context vars may also be present: `PAPERCLIP_TASK_ID` (issue/task that triggered this wake), `PAPERCLIP_WAKE_REASON` (why this run was triggered), `PAPERCLIP_WAKE_COMMENT_ID` (specific comment that triggered this wake), `PAPERCLIP_APPROVAL_ID`, `PAPERCLIP_APPROVAL_STATUS`, and `PAPERCLIP_LINKED_ISSUE_IDS` (comma-separated). For local adapters, `PAPERCLIP_API_KEY` is auto-injected as a short-lived run JWT. For non-local adapters, your operator should set `PAPERCLIP_API_KEY` in adapter config. All requests use `Authorization: Bearer $PAPERCLIP_API_KEY`. All endpoints under `/api`, all JSON. Never hard-code the API URL.
+Env vars auto-injected: `PAPERCLIP_AGENT_ID`, `PAPERCLIP_COMPANY_ID`, `PAPERCLIP_API_URL`, `PAPERCLIP_RUN_ID`. Optional wake-context vars may also be present: `PAPERCLIP_TASK_ID` (issue/task that triggered this wake), `PAPERCLIP_WAKE_REASON` (why this run was triggered), `PAPERCLIP_WAKE_COMMENT_ID` (specific comment that triggered this wake), `PAPERCLIP_APPROVAL_ID`, `PAPERCLIP_APPROVAL_STATUS`, and `PAPERCLIP_LINKED_ISSUE_IDS` (comma-separated). For non-local adapters, claim-aware runs may also include `PAPERCLIP_CLAIM_FILE`, `PAPERCLIP_EXPECTED_CLAIM_AGENT_ID`, `PAPERCLIP_EXPECTED_CLAIM_COMPANY_ID`, `PAPERCLIP_EXPECTED_CLAIM_ROLE`, and `PAPERCLIP_EXPECTED_CLAIM_FILE`. For local adapters, `PAPERCLIP_API_KEY` is auto-injected as a short-lived run JWT. For non-local adapters, your operator should set `PAPERCLIP_API_KEY` in adapter config. All requests use `Authorization: Bearer $PAPERCLIP_API_KEY` and `X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID`. All endpoints under `/api`, all JSON. Never hard-code the API URL.
 
 Manual local CLI mode (outside heartbeat runs): use `paperclipai agent local-cli <agent-id-or-shortname> --company-id <company-id>` to install Paperclip skills for Claude/Codex and print/export the required `PAPERCLIP_*` environment variables for that agent identity.
 
-**Run audit trail:** You MUST include `-H 'X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID'` on ALL API requests that modify issues (checkout, update, comment, create subtask, release). This links your actions to the current heartbeat run for traceability.
+**Run audit trail:** You MUST include `-H 'X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID'` on ALL Paperclip API requests. This links your actions to the current heartbeat run and prevents cross-agent token reuse from silently succeeding.
 
 ## The Heartbeat Procedure
 
 Follow these steps every time you wake up:
+
+**Step 0 - Claim validation (required for non-local claim-file runs).** If `PAPERCLIP_CLAIM_FILE` is set, validate the saved JSON before any API call. Expand `~` to `$HOME`, then run:
+
+```bash
+CLAIM_PATH="${PAPERCLIP_CLAIM_FILE/#\~/$HOME}"
+jq -e '.token | type == "string" and length > 0' "$CLAIM_PATH" >/dev/null
+jq -e \
+  --arg agentId "$PAPERCLIP_EXPECTED_CLAIM_AGENT_ID" \
+  --arg companyId "$PAPERCLIP_EXPECTED_CLAIM_COMPANY_ID" \
+  --arg role "$PAPERCLIP_EXPECTED_CLAIM_ROLE" \
+  --arg claimFile "$PAPERCLIP_EXPECTED_CLAIM_FILE" \
+  '.claimIdentity.agentId == $agentId and
+   .claimIdentity.companyId == $companyId and
+   (.claimIdentity.agentRole // "") == $role and
+   .claimIdentity.claimFilePath == $claimFile' "$CLAIM_PATH" >/dev/null
+export PAPERCLIP_API_KEY="$(jq -r '.token' "$CLAIM_PATH")"
+```
+
+If any check fails, stop immediately. Do not use another agent's API key, do not guess a different claim file, and do not continue the heartbeat.
 
 **Step 1 — Identity.** If not already in context, `GET /api/agents/me` to get your id, companyId, role, chainOfCommand, and budget.
 

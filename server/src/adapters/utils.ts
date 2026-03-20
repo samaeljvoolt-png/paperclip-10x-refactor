@@ -17,6 +17,7 @@ export {
   resolvePathValue,
   renderTemplate,
   redactEnvForLogs,
+  buildPaperclipClaimIdentity,
   buildPaperclipEnv,
   defaultPathForPlatform,
   ensurePathInEnv,

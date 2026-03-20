@@ -132,6 +132,11 @@ function normalizeSessionKeyStrategy(value: unknown): SessionKeyStrategy {
   return "issue";
 }
 
+function isRateLimitMessage(value: string | null | undefined): boolean {
+  const normalized = value?.trim().toLowerCase() ?? "";
+  return normalized.includes("rate limit");
+}
+
 function resolveSessionKey(input: {
   strategy: SessionKeyStrategy;
   configuredSessionKey: string | null;
@@ -313,7 +318,7 @@ function resolvePaperclipApiUrlOverride(value: unknown): string | null {
   try {
     const parsed = new URL(raw);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
-    return parsed.toString();
+    return parsed.toString().replace(/\/+$/, "");
   } catch {
     return null;
   }
@@ -375,6 +380,24 @@ function buildWakeText(payload: WakePayload, paperclipEnv: Record<string, string
 
   const issueIdHint = payload.taskId ?? payload.issueId ?? "";
   const apiBaseHint = paperclipEnv.PAPERCLIP_API_URL ?? "<set PAPERCLIP_API_URL>";
+  const companyIdHint = paperclipEnv.PAPERCLIP_COMPANY_ID ?? "";
+  const agentKind = paperclipEnv.PAPERCLIP_AGENT_KIND ?? "executor";
+  const supervisorWorkflow =
+    agentKind === "supervisor"
+      ? [
+          "Supervisor orchestration rules:",
+          "- Do not narrate your plan in the session transcript. Execute the API steps directly and keep output minimal.",
+          "- If the issue spans multiple domains or needs specialist execution, do not do the specialist work yourself.",
+          "- If GET /api/issues/{issueId} shows parentId set, requestDepth > 0, or a title/body asking for a validation note, treat the issue as a leaf lane: do not delegate further, post the note directly, and stop.",
+          `- Discover the live company roster via GET /api/companies/${companyIdHint}/agents.`,
+          `- If delegation is needed, create child issues with POST /api/companies/${companyIdHint}/issues using parentId=${issueIdHint}.`,
+          "- Assign technical work to CTO/engineering roles, content and UX review to CMO/editorial roles, and browser validation to QA/verifier roles.",
+          "- After creating child issues, POST a parent comment summarizing the delegation plan and stop the run cleanly.",
+          `- On later wakes, check specialist progress with GET /api/companies/${companyIdHint}/issues?parentId=${issueIdHint}.`,
+          "- Only mark the parent issue done after child issues provide evidence or are completed, and after any required work product/artifact has been recorded.",
+          "",
+        ]
+      : [];
 
   const lines = [
     "Paperclip wake event for a cloud adapter.",
@@ -387,6 +410,8 @@ function buildWakeText(payload: WakePayload, paperclipEnv: Record<string, string
     `PAPERCLIP_API_KEY=<token from ${claimedApiKeyPath}>`,
     "",
     `Load PAPERCLIP_API_KEY from ${claimedApiKeyPath} (the token you saved after claim-api-key).`,
+    "Before any heartbeat loop starts, verify that the saved claim JSON contains claimIdentity.agentId, claimIdentity.companyId, claimIdentity.agentRole, and claimIdentity.claimFilePath matching this agent. If any field mismatches, stop and request a fresh claim file for this exact agent.",
+    `Suggested validation: CLAIM_PATH="${paperclipEnv.PAPERCLIP_CLAIM_FILE ?? claimedApiKeyPath}". Replace ~ with $HOME, then run jq against .claimIdentity and export PAPERCLIP_API_KEY from .token only if every field matches.`,
     "",
     `api_base=${apiBaseHint}`,
     `task_id=${payload.taskId ?? ""}`,
@@ -399,10 +424,16 @@ function buildWakeText(payload: WakePayload, paperclipEnv: Record<string, string
     "",
     "HTTP rules:",
     "- Use Authorization: Bearer $PAPERCLIP_API_KEY on every API call.",
-    "- Use X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID on every mutating API call.",
+    "- Use X-Paperclip-Run-Id: $PAPERCLIP_RUN_ID on every Paperclip API call.",
     "- Use only /api endpoints listed below.",
     "- Do NOT call guessed endpoints like /api/cloud-adapter/*, /api/cloud-adapters/*, /api/adapters/cloud/*, or /api/heartbeat.",
+    "- Do not narrate intended actions before making the API calls. Perform the calls first.",
+    "- Do not print 'I'll', 'I will', 'Now I will', or restate the checklist in the transcript.",
+    "- Your first assistant output, if any, must come after the first successful Paperclip API call or after a real blocking error.",
+    "- For smoke and orchestration runs, keep transcript output to short factual status lines only.",
+    "- Unless the issue explicitly requests another language, write all final reports, final summaries, deliverables, and user-facing coordination comments in Spanish.",
     "",
+    ...supervisorWorkflow,
     "Workflow:",
     "1) GET /api/agents/me",
     `2) Determine issueId: PAPERCLIP_TASK_ID if present, otherwise issue_id (${issueIdHint}).`,
@@ -410,19 +441,31 @@ function buildWakeText(payload: WakePayload, paperclipEnv: Record<string, string
     "   - POST /api/issues/{issueId}/checkout with {\"agentId\":\"$PAPERCLIP_AGENT_ID\",\"expectedStatuses\":[\"todo\",\"backlog\",\"blocked\"]}",
     "   - GET /api/issues/{issueId}",
     "   - GET /api/issues/{issueId}/comments",
-    "   - Execute the issue instructions exactly.",
+    "   - If the issue asks for a deliverable (report, HTML file, artifact, app, preview, branch, PR, or similar), persist the output first and POST /api/issues/{issueId}/work-products before attempting to mark the issue done.",
+    "   - For file deliverables, create a work product with type=artifact or type=document and metadata.path set to the absolute file path that now exists on disk. Include the same path in the final comment.",
+    "   - For app/code deliverables, create a work product with type=preview_url, runtime_service, pull_request, branch, or commit using a verifiable url or externalId before marking done.",
+    "   - If you post a final report, summary, or coordination comment to the user, write it in Spanish unless the issue explicitly requests another language.",
+    agentKind === "supervisor"
+      ? "   - If the issue is already a child lane, has requestDepth > 0, or asks only for a note/evidence, do not delegate; post the note directly and stop. Otherwise, if delegation is needed, immediately GET /api/companies/{companyId}/agents, create the child issues, POST the coordination comment, and stop."
+      : "   - Execute the issue instructions exactly.",
     "   - If instructions require a comment, POST /api/issues/{issueId}/comments with {\"body\":\"...\"}.",
-    "   - PATCH /api/issues/{issueId} with {\"status\":\"done\",\"comment\":\"what changed and why\"}.",
+    agentKind === "supervisor"
+      ? "   - PATCH /api/issues/{issueId} to done only when specialist evidence already exists."
+      : "   - PATCH /api/issues/{issueId} with {\"status\":\"done\",\"comment\":\"what changed and why\"}.",
     "4) If issueId does not exist:",
     "   - GET /api/companies/$PAPERCLIP_COMPANY_ID/issues?assigneeAgentId=$PAPERCLIP_AGENT_ID&status=todo,in_progress,blocked",
     "   - Pick in_progress first, then todo, then blocked, then execute step 3.",
     "",
     "Useful endpoints for issue work:",
+    "- GET /api/companies/{companyId}/agents",
+    "- GET /api/companies/{companyId}/issues?parentId={issueId}",
     "- POST /api/issues/{issueId}/comments",
     "- PATCH /api/issues/{issueId}",
     "- POST /api/companies/{companyId}/issues (when asked to create a new issue)",
     "",
-    "Complete the workflow in this run.",
+    agentKind === "supervisor"
+      ? "Complete the orchestration step that is appropriate for this run. Do not stay in a long synchronous loop waiting for specialists."
+      : "Complete the workflow in this run.",
   ];
   return lines.join("\n");
 }
@@ -1347,6 +1390,18 @@ export async function execute(ctx: AdapterExecutionContext): Promise<AdapterExec
         extractResultText(asRecord(latestResultPayload)) ??
         null;
       const summary = summaryFromEvents || summaryFromPayload || null;
+      const sawRateLimit = isRateLimitMessage(lifecycleError);
+
+      if (sawRateLimit && !summaryFromPayload) {
+        return {
+          exitCode: 1,
+          signal: null,
+          timedOut: false,
+          errorMessage: lifecycleError ?? "OpenClaw gateway hit an upstream rate limit",
+          errorCode: "openclaw_gateway_rate_limited",
+          resultJson: asRecord(latestResultPayload),
+        };
+      }
 
       const acceptedResult = asRecord(acceptedPayload?.result);
       const latestPayload = asRecord(latestResultPayload);

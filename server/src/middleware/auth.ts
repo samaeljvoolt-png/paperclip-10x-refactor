@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import type { Request, RequestHandler } from "express";
 import { and, eq, isNull } from "drizzle-orm";
 import type { Db } from "@paperclipai/db";
-import { agentApiKeys, agents, companyMemberships, instanceUserRoles } from "@paperclipai/db";
+import { agentApiKeys, agents, companyMemberships, heartbeatRuns, instanceUserRoles } from "@paperclipai/db";
 import { verifyLocalAgentJwt } from "../agent-auth-jwt.js";
 import type { DeploymentMode } from "@paperclipai/shared";
 import type { BetterAuthSessionResult } from "../auth/better-auth.js";
@@ -17,14 +17,29 @@ interface ActorMiddlewareOptions {
   resolveSession?: (req: Request) => Promise<BetterAuthSessionResult | null>;
 }
 
+async function runBelongsToAgent(db: Db, runId: string, agentId: string, companyId: string) {
+  const run = await db
+    .select({
+      id: heartbeatRuns.id,
+      agentId: heartbeatRuns.agentId,
+      companyId: heartbeatRuns.companyId,
+    })
+    .from(heartbeatRuns)
+    .where(eq(heartbeatRuns.id, runId))
+    .then((rows) => rows[0] ?? null);
+
+  if (!run) return false;
+  return run.agentId === agentId && run.companyId === companyId;
+}
+
 export function actorMiddleware(db: Db, opts: ActorMiddlewareOptions): RequestHandler {
   return async (req, _res, next) => {
+    const runIdHeader = req.header("x-paperclip-run-id");
+    const allowImplicitBoard = opts.deploymentMode === "local_trusted" && !runIdHeader;
     req.actor =
-      opts.deploymentMode === "local_trusted"
+      allowImplicitBoard
         ? { type: "board", userId: "local-board", isInstanceAdmin: true, source: "local_implicit" }
         : { type: "none", source: "none" };
-
-    const runIdHeader = req.header("x-paperclip-run-id");
 
     const authHeader = req.header("authorization");
     if (!authHeader?.toLowerCase().startsWith("bearer ")) {
@@ -110,12 +125,31 @@ export function actorMiddleware(db: Db, opts: ActorMiddlewareOptions): RequestHa
         return;
       }
 
+      const resolvedRunId = runIdHeader || claims.run_id || undefined;
+      if (resolvedRunId) {
+        const runMatches = await runBelongsToAgent(db, resolvedRunId, claims.sub, claims.company_id);
+        if (!runMatches) {
+          logger.warn(
+            {
+              method: req.method,
+              url: req.originalUrl,
+              agentId: claims.sub,
+              companyId: claims.company_id,
+              runId: resolvedRunId,
+            },
+            "Rejected agent JWT because run ownership did not match token identity",
+          );
+          next();
+          return;
+        }
+      }
+
       req.actor = {
         type: "agent",
         agentId: claims.sub,
         companyId: claims.company_id,
         keyId: undefined,
-        runId: runIdHeader || claims.run_id || undefined,
+        runId: resolvedRunId,
         source: "agent_jwt",
       };
       next();
@@ -136,6 +170,25 @@ export function actorMiddleware(db: Db, opts: ActorMiddlewareOptions): RequestHa
     if (!agentRecord || agentRecord.status === "terminated" || agentRecord.status === "pending_approval") {
       next();
       return;
+    }
+
+    if (runIdHeader) {
+      const runMatches = await runBelongsToAgent(db, runIdHeader, key.agentId, key.companyId);
+      if (!runMatches) {
+        logger.warn(
+          {
+            method: req.method,
+            url: req.originalUrl,
+            agentId: key.agentId,
+            companyId: key.companyId,
+            runId: runIdHeader,
+            keyId: key.id,
+          },
+          "Rejected agent API key because run ownership did not match token identity",
+        );
+        next();
+        return;
+      }
     }
 
     req.actor = {

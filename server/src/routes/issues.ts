@@ -1,5 +1,7 @@
 import { Router, type Request, type Response } from "express";
 import multer from "multer";
+import { existsSync, statSync } from "node:fs";
+import { isAbsolute } from "node:path";
 import type { Db } from "@paperclipai/db";
 import {
   addIssueCommentSchema,
@@ -34,8 +36,64 @@ import { forbidden, HttpError, unauthorized } from "../errors.js";
 import { assertCompanyAccess, getActorInfo } from "./authz.js";
 import { shouldWakeAssigneeOnCheckout } from "./issues-checkout-wakeup.js";
 import { isAllowedContentType, MAX_ATTACHMENT_BYTES } from "../attachment-types.js";
+import { canAssignTasksByRole } from "../services/agent-permissions.js";
+import type { Issue, IssueWorkProduct } from "@paperclipai/shared";
 
 const MAX_ISSUE_COMMENT_LIMIT = 500;
+const DELIVERABLE_HINT_PATTERN =
+  /\b(deliver|deliverable|artifact|report|html|file|output|preview|pull request|branch|commit|web app|sandbox|work product)\b/i;
+
+function issueRequiresDeliverableEvidence(issue: Pick<Issue, "title" | "description">): boolean {
+  const haystack = `${issue.title}\n${issue.description ?? ""}`;
+  return DELIVERABLE_HINT_PATTERN.test(haystack);
+}
+
+function extractWorkProductPath(product: IssueWorkProduct): string | null {
+  const metadata = product.metadata ?? {};
+  const candidates = [
+    metadata.path,
+    metadata.localPath,
+    metadata.absolutePath,
+    metadata.filePath,
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim().length > 0) return candidate.trim();
+  }
+  return null;
+}
+
+function isExistingAbsoluteFile(path: string): boolean {
+  if (!isAbsolute(path)) return false;
+  if (!existsSync(path)) return false;
+  try {
+    return statSync(path).isFile();
+  } catch {
+    return false;
+  }
+}
+
+function hasVerifiableDeliverable(products: IssueWorkProduct[]): boolean {
+  for (const product of products) {
+    if (product.type === "artifact" || product.type === "document") {
+      if (typeof product.url === "string" && product.url.trim().length > 0) return true;
+      const localPath = extractWorkProductPath(product);
+      if (localPath && isExistingAbsoluteFile(localPath)) return true;
+      continue;
+    }
+
+    if (
+      product.type === "preview_url" ||
+      product.type === "runtime_service" ||
+      product.type === "pull_request" ||
+      product.type === "branch" ||
+      product.type === "commit"
+    ) {
+      if (typeof product.url === "string" && product.url.trim().length > 0) return true;
+      if (typeof product.externalId === "string" && product.externalId.trim().length > 0) return true;
+    }
+  }
+  return false;
+}
 
 export function issueRoutes(db: Db, storage: StorageService) {
   const router = Router();
@@ -87,10 +145,13 @@ export function issueRoutes(db: Db, storage: StorageService) {
     return false;
   }
 
-  function canCreateAgentsLegacy(agent: { permissions: Record<string, unknown> | null | undefined; role: string }) {
-    if (agent.role === "ceo") return true;
-    if (!agent.permissions || typeof agent.permissions !== "object") return false;
-    return Boolean((agent.permissions as Record<string, unknown>).canCreateAgents);
+  function canAssignTasksLegacy(agent: {
+    permissions: Record<string, unknown> | null | undefined;
+    role: string;
+    name?: string | null;
+    title?: string | null;
+  }) {
+    return canAssignTasksByRole(agent.role, agent.permissions, agent.name, agent.title);
   }
 
   async function assertCanAssignTasks(req: Request, companyId: string) {
@@ -106,7 +167,7 @@ export function issueRoutes(db: Db, storage: StorageService) {
       const allowedByGrant = await access.hasPermission(companyId, "agent", req.actor.agentId, "tasks:assign");
       if (allowedByGrant) return;
       const actorAgent = await agentsSvc.getById(req.actor.agentId);
-      if (actorAgent && actorAgent.companyId === companyId && canCreateAgentsLegacy(actorAgent)) return;
+      if (actorAgent && actorAgent.companyId === companyId && canAssignTasksLegacy(actorAgent)) return;
       throw forbidden("Missing permission: tasks:assign");
     }
     throw unauthorized();
@@ -757,8 +818,14 @@ export function issueRoutes(db: Db, storage: StorageService) {
     }
 
     const actor = getActorInfo(req);
-    const issue = await svc.create(companyId, {
+    const createPayload = {
       ...req.body,
+      status:
+        req.body.status ??
+        (req.body.assigneeAgentId || req.body.assigneeUserId ? "todo" : "backlog"),
+    };
+    const issue = await svc.create(companyId, {
+      ...createPayload,
       createdByAgentId: actor.agentId,
       createdByUserId: actor.actorType === "user" ? actor.actorId : null,
     });
@@ -823,6 +890,21 @@ export function issueRoutes(db: Db, storage: StorageService) {
     const { comment: commentBody, hiddenAt: hiddenAtRaw, ...updateFields } = req.body;
     if (hiddenAtRaw !== undefined) {
       updateFields.hiddenAt = hiddenAtRaw ? new Date(hiddenAtRaw) : null;
+    }
+    if (updateFields.status === "done" && issueRequiresDeliverableEvidence(existing)) {
+      const workProducts = await workProductsSvc.listForIssue(existing.id);
+      if (!hasVerifiableDeliverable(workProducts)) {
+        res.status(422).json({
+          error: "Deliverable evidence required before closing this issue",
+          details: {
+            issueId: existing.id,
+            identifier: existing.identifier,
+            hint:
+              "Create a work product first. For file deliverables, use type artifact/document with metadata.path set to an existing absolute file path or a durable URL. For app/code deliverables, use preview_url/runtime_service/pull_request/branch/commit with a verifiable url or externalId.",
+          },
+        });
+        return;
+      }
     }
     let issue;
     try {

@@ -1,0 +1,310 @@
+{
+  "summary": {
+    "generatedAt": "2026-03-20T06:08:49.622Z",
+    "apiBase": "http://127.0.0.1:3100",
+    "companyId": "05100f6d-b0a4-4a15-b785-61949b90c6df",
+    "health": {
+      "status": "ok",
+      "version": "0.3.1",
+      "deploymentMode": "local_trusted",
+      "deploymentExposure": "private",
+      "authReady": true,
+      "bootstrapStatus": "ready",
+      "bootstrapInviteActive": false,
+      "features": {
+        "companyDeletionEnabled": true
+      }
+    },
+    "totalIssues": 77,
+    "statusCounts": {
+      "backlog": 9,
+      "blocked": 2,
+      "done": 33,
+      "in_progress": 22,
+      "todo": 11
+    },
+    "activeIssueCount": 12,
+    "blockedIssueCount": 2,
+    "staleInProgressCount": 12,
+    "queuedWithRunIdCount": 1,
+    "watchdog": null
+  },
+  "activeIssues": [
+    {
+      "identifier": "ALQ-47",
+      "title": "Compare model benchmarking tools for our use case",
+      "status": "in_progress",
+      "assigneeAgentId": "ffd46986-8f64-4c75-8113-c0c337944a3b",
+      "executionRunId": "da1294ac-d5ad-4213-a2af-9a1bb56a3590",
+      "parentId": "6ff7a346-b929-42c9-8fa3-56db940b3b67",
+      "updatedAt": "2026-03-20T06:07:47.211Z",
+      "ageMinutes": 1
+    },
+    {
+      "identifier": "ALQ-3",
+      "title": "Draft technical architecture and delivery plan",
+      "status": "done",
+      "assigneeAgentId": null,
+      "executionRunId": "56ca8b86-437e-4319-85f5-79257808340b",
+      "parentId": null,
+      "updatedAt": "2026-03-20T06:04:36.862Z",
+      "ageMinutes": 4
+    },
+    {
+      "identifier": "ALQ-72",
+      "title": "CFO post-fix delegation smoke",
+      "status": "in_progress",
+      "assigneeAgentId": "1fd72183-957c-4590-a7a6-cf74dd0c4f55",
+      "executionRunId": null,
+      "parentId": null,
+      "updatedAt": "2026-03-20T06:01:21.815Z",
+      "ageMinutes": 7
+    },
+    {
+      "identifier": "ALQ-74",
+      "title": "Content outline for delegation smoke test",
+      "status": "in_progress",
+      "assigneeAgentId": "54387dfa-4769-40ba-b9b8-1605a1a027e2",
+      "executionRunId": null,
+      "parentId": "66056bae-bc2c-4d83-83b5-386cabd5744a",
+      "updatedAt": "2026-03-20T05:59:02.772Z",
+      "ageMinutes": 10
+    },
+    {
+      "identifier": "ALQ-71",
+      "title": "CMO post-fix delegation smoke",
+      "status": "in_progress",
+      "assigneeAgentId": "05d4231e-ae7e-4eaa-9961-dc1b7e91700b",
+      "executionRunId": null,
+      "parentId": null,
+      "updatedAt": "2026-03-20T05:56:20.055Z",
+      "ageMinutes": 12
+    },
+    {
+      "identifier": "ALQ-73",
+      "title": "Creative concept for delegation smoke test",
+      "status": "todo",
+      "assigneeAgentId": "7d10f6da-c7ff-4696-b4c0-282f0c94f228",
+      "executionRunId": "674a1003-31b6-4f6b-8996-fb3eef634e39",
+      "parentId": "66056bae-bc2c-4d83-83b5-386cabd5744a",
+      "updatedAt": "2026-03-20T05:56:13.433Z",
+      "ageMinutes": 13
+    },
+    {
+      "identifier": "ALQ-70",
+      "title": "Review and refine drafted content",
+      "status": "in_progress",
+      "assigneeAgentId": "29b9742b-a07f-4c42-9f03-da3b24fbafcc",
+      "executionRunId": "51f81b18-7c8c-4d4f-8a53-f378d55ae73b",
+      "parentId": "236f7e22-463e-4e8c-b293-c5b8f5ef31a1",
+      "updatedAt": "2026-03-20T05:55:37.694Z",
+      "ageMinutes": 13
+    },
+    {
+      "identifier": "ALQ-68",
+      "title": "Design supporting visuals",
+      "status": "in_progress",
+      "assigneeAgentId": "990f4ae5-6c51-4afc-9453-2ea1b763dba2",
+      "executionRunId": null,
+      "parentId": "236f7e22-463e-4e8c-b293-c5b8f5ef31a1",
+      "updatedAt": "2026-03-20T05:53:38.777Z",
+      "ageMinutes": 15
+    },
+    {
+      "identifier": "ALQ-67",
+      "title": "Content Creation for CMO delegation smoke",
+      "status": "in_progress",
+      "assigneeAgentId": "54387dfa-4769-40ba-b9b8-1605a1a027e2",
+      "executionRunId": null,
+      "parentId": "1df537be-54a0-4bfe-afc8-9f878222a8c7",
+      "updatedAt": "2026-03-20T05:52:38.530Z",
+      "ageMinutes": 16
+    },
+    {
+      "identifier": "ALQ-65",
+      "title": "CMO delegation smoke after claim normalization",
+      "status": "in_progress",
+      "assigneeAgentId": "05d4231e-ae7e-4eaa-9961-dc1b7e91700b",
+      "executionRunId": null,
+      "parentId": null,
+      "updatedAt": "2026-03-20T05:50:41.965Z",
+      "ageMinutes": 18
+    },
+    {
+      "identifier": "ALQ-61",
+      "title": "CTO delegation smoke after live permission fix v2",
+      "status": "in_progress",
+      "assigneeAgentId": "4cd10538-901f-4c8f-81d4-f87bb89afbdd",
+      "executionRunId": null,
+      "parentId": null,
+      "updatedAt": "2026-03-20T05:37:41.039Z",
+      "ageMinutes": 31
+    },
+    {
+      "identifier": "ALQ-60",
+      "title": "CTO delegation smoke after role-based assign fix",
+      "status": "in_progress",
+      "assigneeAgentId": "4cd10538-901f-4c8f-81d4-f87bb89afbdd",
+      "executionRunId": null,
+      "parentId": null,
+      "updatedAt": "2026-03-20T05:36:08.471Z",
+      "ageMinutes": 33
+    }
+  ],
+  "blockedIssues": [
+    {
+      "identifier": "ALQ-58",
+      "title": "Format research into concise markdown/HTML brief",
+      "status": "blocked",
+      "assigneeAgentId": "6fb3b38f-6fb9-4eb8-a1b6-9562b253c8e6",
+      "executionRunId": null,
+      "parentId": "78734a83-04df-4928-854c-6c3b20d289fa",
+      "updatedAt": "2026-03-20T05:25:51.017Z",
+      "ageMinutes": 43
+    },
+    {
+      "identifier": "ALQ-51",
+      "title": "Technical audit: performance, accessibility, responsive, security smells",
+      "status": "blocked",
+      "assigneeAgentId": "4cd10538-901f-4c8f-81d4-f87bb89afbdd",
+      "executionRunId": null,
+      "parentId": "edf86be1-a456-4d7a-bb3b-b09484905df9",
+      "updatedAt": "2026-03-20T04:06:27.313Z",
+      "ageMinutes": 122
+    }
+  ],
+  "staleInProgress": [
+    {
+      "identifier": "ALQ-61",
+      "title": "CTO delegation smoke after live permission fix v2",
+      "status": "in_progress",
+      "assigneeAgentId": "4cd10538-901f-4c8f-81d4-f87bb89afbdd",
+      "executionRunId": null,
+      "parentId": null,
+      "updatedAt": "2026-03-20T05:37:41.039Z",
+      "ageMinutes": 31
+    },
+    {
+      "identifier": "ALQ-60",
+      "title": "CTO delegation smoke after role-based assign fix",
+      "status": "in_progress",
+      "assigneeAgentId": "4cd10538-901f-4c8f-81d4-f87bb89afbdd",
+      "executionRunId": null,
+      "parentId": null,
+      "updatedAt": "2026-03-20T05:36:08.471Z",
+      "ageMinutes": 33
+    },
+    {
+      "identifier": "ALQ-52",
+      "title": "UI/UX and navigation audit: user flows, homepage, main nav",
+      "status": "in_progress",
+      "assigneeAgentId": "c77ea075-6ee6-4261-a437-4c0faf02c06e",
+      "executionRunId": null,
+      "parentId": "edf86be1-a456-4d7a-bb3b-b09484905df9",
+      "updatedAt": "2026-03-20T05:09:55.174Z",
+      "ageMinutes": 59
+    },
+    {
+      "identifier": "ALQ-49",
+      "title": "Research current LLM benchmarking tools and approaches",
+      "status": "in_progress",
+      "assigneeAgentId": "4cd10538-901f-4c8f-81d4-f87bb89afbdd",
+      "executionRunId": null,
+      "parentId": "6ff7a346-b929-42c9-8fa3-56db940b3b67",
+      "updatedAt": "2026-03-20T05:08:10.562Z",
+      "ageMinutes": 61
+    },
+    {
+      "identifier": "ALQ-48",
+      "title": "Format research brief as markdown/HTML deliverable",
+      "status": "in_progress",
+      "assigneeAgentId": "5386a001-8797-4250-a764-0d0b3c2fb25e",
+      "executionRunId": null,
+      "parentId": "6ff7a346-b929-42c9-8fa3-56db940b3b67",
+      "updatedAt": "2026-03-20T05:05:33.660Z",
+      "ageMinutes": 63
+    },
+    {
+      "identifier": "ALQ-46",
+      "title": "Audit academy.alquim-ia.cloud and deliver an HTML findings report",
+      "status": "in_progress",
+      "assigneeAgentId": "96c556c3-5df8-42b3-925b-23bebc040226",
+      "executionRunId": null,
+      "parentId": null,
+      "updatedAt": "2026-03-20T05:02:58.051Z",
+      "ageMinutes": 66
+    },
+    {
+      "identifier": "ALQ-50",
+      "title": "Content and SEO audit: clarity, broken links, SEO basics",
+      "status": "in_progress",
+      "assigneeAgentId": "05d4231e-ae7e-4eaa-9961-dc1b7e91700b",
+      "executionRunId": null,
+      "parentId": "edf86be1-a456-4d7a-bb3b-b09484905df9",
+      "updatedAt": "2026-03-20T04:07:39.912Z",
+      "ageMinutes": 121
+    },
+    {
+      "identifier": "ALQ-45",
+      "title": "Research current model benchmarking approaches and tools",
+      "status": "in_progress",
+      "assigneeAgentId": "96c556c3-5df8-42b3-925b-23bebc040226",
+      "executionRunId": null,
+      "parentId": null,
+      "updatedAt": "2026-03-20T04:00:25.374Z",
+      "ageMinutes": 128
+    },
+    {
+      "identifier": "ALQ-44",
+      "title": "Build a minimal model benchmark sandbox web app",
+      "status": "in_progress",
+      "assigneeAgentId": "4cd10538-901f-4c8f-81d4-f87bb89afbdd",
+      "executionRunId": null,
+      "parentId": null,
+      "updatedAt": "2026-03-20T03:59:20.555Z",
+      "ageMinutes": 129
+    },
+    {
+      "identifier": "ALQ-42",
+      "title": "Technical orchestration battery: CTO 4-lane delegation smoke",
+      "status": "in_progress",
+      "assigneeAgentId": "4cd10538-901f-4c8f-81d4-f87bb89afbdd",
+      "executionRunId": null,
+      "parentId": null,
+      "updatedAt": "2026-03-20T03:39:52.783Z",
+      "ageMinutes": 149
+    },
+    {
+      "identifier": "ALQ-34",
+      "title": "Wide orchestration battery: 7-lane real delegation smoke",
+      "status": "in_progress",
+      "assigneeAgentId": "96c556c3-5df8-42b3-925b-23bebc040226",
+      "executionRunId": null,
+      "parentId": null,
+      "updatedAt": "2026-03-20T03:34:02.373Z",
+      "ageMinutes": 155
+    },
+    {
+      "identifier": "ALQ-27",
+      "title": "Orchestration smoke: delegated lanes battery v2",
+      "status": "in_progress",
+      "assigneeAgentId": "96c556c3-5df8-42b3-925b-23bebc040226",
+      "executionRunId": null,
+      "parentId": null,
+      "updatedAt": "2026-03-20T03:20:08.647Z",
+      "ageMinutes": 169
+    }
+  ],
+  "queuedWithRunId": [
+    {
+      "identifier": "ALQ-73",
+      "title": "Creative concept for delegation smoke test",
+      "status": "todo",
+      "assigneeAgentId": "7d10f6da-c7ff-4696-b4c0-282f0c94f228",
+      "executionRunId": "674a1003-31b6-4f6b-8996-fb3eef634e39",
+      "parentId": "66056bae-bc2c-4d83-83b5-386cabd5744a",
+      "updatedAt": "2026-03-20T05:56:13.433Z",
+      "ageMinutes": 13
+    }
+  ]
+}

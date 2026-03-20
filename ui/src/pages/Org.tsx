@@ -10,6 +10,7 @@ import { EmptyState } from "../components/EmptyState";
 import { PageSkeleton } from "../components/PageSkeleton";
 import { ChevronRight, GitBranch } from "lucide-react";
 import { cn } from "../lib/utils";
+import { getOrgRoleFlowLabel } from "@paperclipai/shared";
 
 function OrgTree({
   nodes,
@@ -79,7 +80,9 @@ function OrgTreeNode({
           )}
         />
         <span className="font-medium flex-1">{node.name}</span>
-        <span className="text-xs text-muted-foreground">{node.role}</span>
+        <span className="text-xs text-muted-foreground">
+          {node.flowLabel ?? getOrgRoleFlowLabel(node.role, node.name, node.title)}
+        </span>
         <StatusBadge status={node.status} />
       </Link>
       {hasChildren && expanded && (
@@ -114,6 +117,21 @@ export function Org() {
   return (
     <div className="space-y-4">
       {error && <p className="text-sm text-destructive">{error.message}</p>}
+
+      <div className="rounded-lg border border-border bg-muted/20 px-4 py-3 text-sm text-muted-foreground">
+        <div className="font-medium text-foreground">Command flow</div>
+        <div className="mt-1">
+          CEO sets direction. Executive roles own function-level outcomes. Functional leads
+          coordinate execution. Operators report status upward and receive work downward through
+          one manager at a time.
+        </div>
+        <div className="mt-2 flex flex-wrap gap-2 text-xs">
+          <span className="rounded-full border border-border px-2 py-0.5">{getOrgRoleFlowLabel("ceo")}</span>
+          <span className="rounded-full border border-border px-2 py-0.5">{getOrgRoleFlowLabel("cto")}</span>
+          <span className="rounded-full border border-border px-2 py-0.5">{getOrgRoleFlowLabel("engineer")}</span>
+          <span className="rounded-full border border-border px-2 py-0.5">{getOrgRoleFlowLabel("general")}</span>
+        </div>
+      </div>
 
       {data && data.length === 0 && (
         <EmptyState

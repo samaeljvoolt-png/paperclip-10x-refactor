@@ -14,6 +14,23 @@ type CompilerAgent = {
   status: string;
 };
 
+const ROLE_ALIASES: Record<string, string[]> = {
+  "dev-verifier": ["qa"],
+  qa: ["dev-verifier"],
+  "dev-debugger": ["qa"],
+  sammy: ["general"],
+};
+
+const ROLE_NAME_HINTS: Record<string, string[]> = {
+  "dev-verifier": ["verifier"],
+  "dev-debugger": ["debugger"],
+  sammy: ["sammy"],
+  cfo: ["cfo"],
+  cto: ["cto"],
+  cmo: ["cmo"],
+  ceo: ["ceo"],
+};
+
 function normalizeWhitespace(input: string) {
   return input.replace(/\r\n/g, "\n").replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
 }
@@ -92,7 +109,32 @@ function unique(items: string[]) {
   return Array.from(new Set(items.map((item) => item.trim()).filter(Boolean)));
 }
 
-function buildRouting(intentType: PromptCompilerIntentType) {
+function buildRouting(intentType: PromptCompilerIntentType, rawRequest: string, additionalContext?: string | null) {
+  const sample = `${rawRequest}\n${additionalContext ?? ""}`.toLowerCase();
+  const isExecutivePackage =
+    /\b(consolida|consolidate|paquete final|final package|resumen ejecutivo|executive summary|próximos pasos|next steps)\b/.test(sample);
+  const isFinance =
+    /\b(cfo|finance|financial|financiero|financiera|costo|beneficio|roi|margen|pricing|presupuesto|budget|risk register|registro de riesgos)\b/.test(
+      sample,
+    );
+  const isQaChecklist =
+    /\b(qa|checklist|smoke|verification|verificación|validación|test plan|plan de pruebas|end-to-end|e2e)\b/.test(sample);
+  const isOperationalRunbook =
+    /\b(runbook|playbook|operator guide|guía operativa|manual operativo|procedimiento operativo)\b/.test(sample);
+
+  if (isFinance) {
+    return { orchestrator: "cfo", executors: [], verification: ["dev-verifier"] };
+  }
+  if (isExecutivePackage) {
+    return { orchestrator: "sammy", executors: [], verification: ["dev-verifier"] };
+  }
+  if (isQaChecklist) {
+    return { orchestrator: "dev-verifier", executors: [], verification: ["dev-verifier"] };
+  }
+  if (isOperationalRunbook) {
+    return { orchestrator: "sammy", executors: [], verification: ["dev-verifier"] };
+  }
+
   switch (intentType) {
     case "audit":
       return { orchestrator: "ceo", executors: ["cto", "dev-verifier"], verification: ["dev-verifier"] };
@@ -230,7 +272,24 @@ function buildRisks(intentType: PromptCompilerIntentType, language: PromptCompil
 
 function resolveSuggestedAssignee(agents: CompilerAgent[], role: string | null) {
   if (!role) return null;
-  return agents.find((agent) => agent.status !== "terminated" && agent.role === role) ?? null;
+  const normalizedRole = role.toLowerCase();
+  const acceptedRoles = new Set([normalizedRole, ...(ROLE_ALIASES[normalizedRole] ?? [])]);
+  const candidates = agents.filter(
+    (agent) => agent.status !== "terminated" && acceptedRoles.has((agent.role ?? "").toLowerCase()),
+  );
+  if (candidates.length <= 1) return candidates[0] ?? null;
+
+  const preferredHints = ROLE_NAME_HINTS[normalizedRole] ?? [];
+  const exactNameMatch = candidates.find((agent) => preferredHints.includes((agent.name ?? "").toLowerCase()));
+  if (exactNameMatch) return exactNameMatch;
+
+  const hintedNameMatch = candidates.find((agent) => {
+    const name = (agent.name ?? "").toLowerCase();
+    return preferredHints.some((hint) => name.includes(hint));
+  });
+  if (hintedNameMatch) return hintedNameMatch;
+
+  return candidates[0] ?? null;
 }
 
 function buildMarkdownBrief(brief: PromptCompilerBrief, rawRequest: string, additionalContext: string | null | undefined) {
@@ -420,7 +479,7 @@ export function compilePromptCompilerBrief(
   const combined = [rawRequest, additionalContext].filter(Boolean).join("\n\n");
   const language = detectLanguage(combined || rawRequest, input.preferredLanguage);
   const intentType = classifyIntent(combined || rawRequest);
-  const routing = buildRouting(intentType);
+  const routing = buildRouting(intentType, rawRequest, input.additionalContext);
   const lines = splitLines(rawRequest);
   const sentences = splitSentences(combined || rawRequest);
   const firstLine = firstNonEmptyLine(rawRequest);
@@ -454,6 +513,13 @@ export function compilePromptCompilerBrief(
       : "Closure without verifiable evidence.",
   ]);
   const constraints = inferConstraints(rawRequest, additionalContext, language);
+  if (routing.executors.length === 0) {
+    constraints.push(
+      language === "es"
+        ? "Ejecución de owner único: no crear child issues ni delegar; completar el entregable directamente y registrar la evidencia."
+        : "Single-owner execution: do not create child issues or delegate; complete the deliverable directly and register the evidence.",
+    );
+  }
   const assumptions = unique([
     language === "es"
       ? "Existe una compañía activa en Paperclip para ejecutar la issue."

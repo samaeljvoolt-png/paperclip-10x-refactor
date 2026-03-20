@@ -607,6 +607,7 @@ describe("openclaw gateway adapter execute", () => {
       expect(message).toContain("write all final reports, final summaries, deliverables, and user-facing coordination comments in Spanish");
       expect(message).toContain("write it in Spanish unless the issue explicitly requests another language");
       expect(message).toContain("Do not narrate intended actions before making the API calls.");
+      expect(message).toContain("If the issue body or constraints say 'Single-owner execution' or 'Ejecución de owner único', do not delegate");
       expect(message).toContain("If the issue is already a child lane, has requestDepth > 0, or asks only for a note/evidence, do not delegate");
       expect(message).toContain("Do not stay in a long synchronous loop waiting for specialists.");
     } finally {

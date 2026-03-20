@@ -43,6 +43,86 @@ const agents: Agent[] = [
     createdAt: new Date(),
     updatedAt: new Date(),
   },
+  {
+    id: "33333333-3333-4333-8333-333333333333",
+    companyId: "company-1",
+    name: "CFO",
+    role: "cfo",
+    status: "active",
+    title: "CFO",
+    reportsTo: null,
+    capabilities: null,
+    adapterType: "openclaw_gateway",
+    adapterConfig: {},
+    runtimeConfig: {},
+    budgetMonthlyCents: 0,
+    metadata: null,
+    permissions: null,
+    urlKey: "cfo",
+    currentMonthlySpendCents: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: "44444444-4444-4444-8444-444444444444",
+    companyId: "company-1",
+    name: "Sammy",
+    role: "sammy",
+    status: "active",
+    title: "Sammy",
+    reportsTo: null,
+    capabilities: null,
+    adapterType: "openclaw_gateway",
+    adapterConfig: {},
+    runtimeConfig: {},
+    budgetMonthlyCents: 0,
+    metadata: null,
+    permissions: null,
+    urlKey: "sammy",
+    currentMonthlySpendCents: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: "55555555-5555-4555-8555-555555555555",
+    companyId: "company-1",
+    name: "Dev Verifier",
+    role: "qa",
+    status: "active",
+    title: "Dev Verifier",
+    reportsTo: null,
+    capabilities: null,
+    adapterType: "openclaw_gateway",
+    adapterConfig: {},
+    runtimeConfig: {},
+    budgetMonthlyCents: 0,
+    metadata: null,
+    permissions: null,
+    urlKey: "dev-verifier",
+    currentMonthlySpendCents: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
+  {
+    id: "66666666-6666-4666-8666-666666666666",
+    companyId: "company-1",
+    name: "Dev Debugger",
+    role: "qa",
+    status: "active",
+    title: "Dev Debugger",
+    reportsTo: null,
+    capabilities: null,
+    adapterType: "openclaw_gateway",
+    adapterConfig: {},
+    runtimeConfig: {},
+    budgetMonthlyCents: 0,
+    metadata: null,
+    permissions: null,
+    urlKey: "dev-debugger",
+    currentMonthlySpendCents: 0,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  },
 ];
 
 describe("prompt compiler service", () => {
@@ -93,5 +173,70 @@ describe("prompt compiler service", () => {
     expect(validation.hardFails.length).toBeGreaterThan(0);
     expect(validation.evidenceErrors.length).toBeGreaterThan(0);
     expect(validation.criteriaErrors.length).toBeGreaterThan(0);
+  });
+
+  it("routes finance requests to CFO instead of generic CEO/CTO lanes", () => {
+    const result = compilePromptCompilerBrief(
+      {
+        rawRequest:
+          "Crea un registro de riesgos y una nota de costo/beneficio para adoptar Prompt Compiler en producción, con informe final en español.",
+        additionalContext:
+          "Debe incluir riesgos operativos, mitigaciones, impactos y una recomendación ejecutiva.",
+        preferredLanguage: "es",
+      },
+      agents,
+    );
+
+    expect(result.brief.roleRouting.orchestrator).toBe("cfo");
+    expect(result.issueDraft.suggestedAssigneeRole).toBe("cfo");
+    expect(result.issueDraft.suggestedAssigneeAgentId).toBe("33333333-3333-4333-8333-333333333333");
+    expect(result.brief.constraints.join("\n")).toContain("owner único");
+  });
+
+  it("routes operational runbooks to Sammy and QA checklists to Dev Verifier", () => {
+    const runbook = compilePromptCompilerBrief(
+      {
+        rawRequest:
+          "Redacta un runbook operativo corto para usar Prompt Compiler en Paperclip y entrega el informe final en español.",
+        additionalContext:
+          "Debe incluir pasos, riesgos, evidencia requerida y criterios de cierre.",
+        preferredLanguage: "es",
+      },
+      agents,
+    );
+    const qaChecklist = compilePromptCompilerBrief(
+      {
+        rawRequest:
+          "Crea un checklist end-to-end de QA para Prompt Compiler en Paperclip y entrega el informe final en español.",
+        additionalContext:
+          "Debe cubrir smoke, regresión, evidencias y criterios de aprobación.",
+        preferredLanguage: "es",
+      },
+      agents,
+    );
+
+    expect(runbook.brief.roleRouting.orchestrator).toBe("sammy");
+    expect(runbook.issueDraft.suggestedAssigneeAgentId).toBe("44444444-4444-4444-8444-444444444444");
+    expect(runbook.brief.constraints.join("\n")).toContain("owner único");
+    expect(qaChecklist.brief.roleRouting.orchestrator).toBe("dev-verifier");
+    expect(qaChecklist.issueDraft.suggestedAssigneeAgentId).toBe("55555555-5555-4555-8555-555555555555");
+    expect(qaChecklist.brief.constraints.join("\n")).toContain("owner único");
+  });
+
+  it("routes executive consolidation packages to Sammy even when they mention validation status", () => {
+    const result = compilePromptCompilerBrief(
+      {
+        rawRequest:
+          "Consolida los entregables reales del Prompt Compiler en un paquete final en español con resumen ejecutivo, artefactos producidos, estado de validación y próximos pasos.",
+        additionalContext:
+          "Debe usar artefactos verificables existentes, no delegar, y registrar un único work product final.",
+        preferredLanguage: "es",
+      },
+      agents,
+    );
+
+    expect(result.brief.roleRouting.orchestrator).toBe("sammy");
+    expect(result.issueDraft.suggestedAssigneeAgentId).toBe("44444444-4444-4444-8444-444444444444");
+    expect(result.brief.constraints.join("\n")).toContain("owner único");
   });
 });

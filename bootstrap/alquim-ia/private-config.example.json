@@ -9,7 +9,9 @@
     "gatewayToken": "replace-with-your-openclaw-gateway-token",
     "agentsSourceDir": "/absolute/path/to/your/private-openclaw-bundle/agents",
     "installAgentsDir": "~/.openclaw/agents",
-    "claimsDir": "~/.openclaw/workspace/claims"
+    "claimsDir": "~/.openclaw/workspace/claims",
+    "skillsSourceDir": "/absolute/path/to/your/private-openclaw-bundle/skills",
+    "installSkillsDir": "~/.openclaw/skills"
   },
   "agents": {
     "ceo": {

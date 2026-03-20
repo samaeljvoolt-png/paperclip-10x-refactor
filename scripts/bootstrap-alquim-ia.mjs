@@ -1,6 +1,6 @@
 import { generateKeyPairSync } from "node:crypto";
 import http from "node:http";
-import { mkdir, mkdtemp, readFile, writeFile, cp, stat, rm } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, writeFile, cp, stat, rm, readdir } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { tmpdir } from "node:os";
@@ -19,6 +19,7 @@ Options:
   --company-name <name>   Override target company name
   --dry-run               Preview only, do not import
   --skip-agent-sync       Do not copy OpenClaw private agent directories
+  --skip-skill-sync       Do not copy OpenClaw skills directories
   --skip-claims           Do not create claim files
   --skip-verify           Skip post-install verification
 `);
@@ -290,6 +291,30 @@ async function syncOpenClawAgents(apiBase, companyId, privateConfig) {
   return { copied, skipped };
 }
 
+async function syncOpenClawSkills(privateConfig) {
+  const sourceDir = ensureAbsoluteMaybeHome(privateConfig.openclaw.skillsSourceDir);
+  const targetDir = ensureAbsoluteMaybeHome(privateConfig.openclaw.installSkillsDir ?? "~/.openclaw/skills");
+  if (!sourceDir) {
+    return { copied: [], skipped: ["No openclaw.skillsSourceDir configured"] };
+  }
+  if (!(await pathExists(sourceDir))) {
+    return { copied: [], skipped: [`Skills source not found: ${sourceDir}`] };
+  }
+
+  await mkdir(targetDir, { recursive: true });
+  const entries = await readdir(sourceDir, { withFileTypes: true });
+  const copied = [];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) continue;
+    const sourceCandidate = path.join(sourceDir, entry.name);
+    const targetCandidate = path.join(targetDir, entry.name);
+    await cp(sourceCandidate, targetCandidate, { recursive: true, force: true });
+    copied.push({ skill: entry.name, source: sourceCandidate, target: targetCandidate });
+  }
+
+  return { copied, skipped: [] };
+}
+
 async function verifyInstall(apiBase, companyId, expectedAgentCount) {
   const health = await apiFetchJson(apiBase, "/api/health");
   const org = await apiFetchJson(apiBase, `/api/companies/${companyId}/org`);
@@ -414,6 +439,8 @@ async function main() {
       args["skip-claims"] ? [] : await writeClaimFiles(apiBase, companyId, privateConfig);
     const syncSummary =
       args["skip-agent-sync"] ? { copied: [], skipped: ["Agent sync skipped"] } : await syncOpenClawAgents(apiBase, companyId, privateConfig);
+    const skillsSummary =
+      args["skip-skill-sync"] ? { copied: [], skipped: ["Skill sync skipped"] } : await syncOpenClawSkills(privateConfig);
     const verifySummary =
       args["skip-verify"] ? null : await verifyInstall(apiBase, companyId, manifest.agents.length);
 
@@ -426,6 +453,7 @@ async function main() {
           claimFiles: claimSummary.length,
           claims: claimSummary,
           agentSync: syncSummary,
+          skillSync: skillsSummary,
           verify: verifySummary,
         },
         null,

@@ -204,7 +204,21 @@ This starts the API server at `http://localhost:3100`. An embedded PostgreSQL da
 
 This branch includes a reproducible company profile for `Alquim-IA`.
 
-After Paperclip itself is installed, create your private config from:
+For the beginner-friendly flow, run:
+
+```bash
+./scripts/setup-alquim-ia.sh
+```
+
+That wizard:
+
+- installs the public OpenClaw CLI if needed
+- asks only for your model provider API key
+- seeds the Alquim-IA agents + skills into `~/.openclaw`
+- starts local Paperclip
+- bootstraps the full `Alquim-IA` company
+
+If you want the lower-level bootstrap path instead, create your private config from:
 
 `bootstrap/alquim-ia/private-config.example.json`
 
@@ -219,6 +233,7 @@ That command imports the curated company, agents, hierarchy, prompts, claim file
 Full guide:
 
 - [Alquim-IA Bootstrap](./docs/deploy/alquim-ia-bootstrap.md)
+- [Alquim-IA Setup Wizard](./docs/deploy/alquim-ia-setup-wizard.md)
 
 ### Oracle Server Setup
 

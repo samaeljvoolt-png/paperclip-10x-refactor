@@ -19,6 +19,8 @@ El objetivo del diseño es:
 - `bootstrap/alquim-ia/public/docs/ORGANIZATION.md`
 - `bootstrap/alquim-ia/public/docs/SKILLS.md`
 - `scripts/bootstrap-alquim-ia.mjs`
+- `scripts/setup-alquim-ia.mjs`
+- `scripts/setup-alquim-ia.sh`
 
 ## Qué no viaja en el branch público
 
@@ -48,6 +50,44 @@ Luego completa:
 - `openclaw.gatewayUrl`
 - `openclaw.gatewayToken`
 - `openclaw.agentsSourceDir`
+- `openclaw.skillsSourceDir`
+
+## Setup guiado para principiantes
+
+Si quieres la ruta más simple posible, usa:
+
+```bash
+./scripts/setup-alquim-ia.sh
+```
+
+Ese wrapper:
+
+1. valida el sistema base
+2. instala la versión pública de OpenClaw si falta
+3. activa `pnpm` si falta
+4. pide la API key del proveedor de modelos
+5. corre `openclaw onboard` en modo no interactivo
+6. recupera `gateway.auth.token`
+7. instala agents + skills en `~/.openclaw`
+8. arranca Paperclip local
+9. ejecuta `bootstrap:alquim-ia`
+
+El wizard también soporta un bundle privado opcional en:
+
+```text
+~/.config/paperclip-bootstrap/alquim-ia.bundle
+```
+
+Estructura recomendada:
+
+```text
+agents/<slug>/AGENTS.md
+skills/<skill>/SKILL.md
+docs/ORGANIZATION.md
+docs/SKILLS.md
+```
+
+Si ese bundle existe, el wizard lo superpone encima del perfil público sin pedir rutas adicionales.
 
 ## Instalación de un comando
 

@@ -171,4 +171,99 @@ describe("issue deliverable enforcement", () => {
     expect(res.status).toBe(200);
     expect(mockIssueService.update).toHaveBeenCalledWith("issue-1", { status: "done" });
   });
+
+  it("rejects closing a single-owner deliverable issue when the work product path does not match the requested path", async () => {
+    const expectedPath = path.join(os.tmpdir(), `paperclip-expected-${Date.now()}.html`);
+    const wrongPath = path.join(os.tmpdir(), `paperclip-wrong-${Date.now()}.html`);
+    writeFileSync(wrongPath, "<!doctype html><title>wrong</title>");
+
+    mockIssueService.getById.mockResolvedValue({
+      id: "issue-1",
+      companyId: "company-1",
+      identifier: "ALQ-201",
+      title: "Audit site and deliver HTML report",
+      description: `Single-owner execution. Save the file to ${expectedPath}.`,
+      status: "in_progress",
+      assigneeAgentId: null,
+      assigneeUserId: null,
+      createdByUserId: "user-1",
+    });
+    mockWorkProductService.listForIssue.mockResolvedValue([
+      {
+        id: "wp-1",
+        companyId: "company-1",
+        projectId: null,
+        issueId: "issue-1",
+        executionWorkspaceId: null,
+        runtimeServiceId: null,
+        type: "document",
+        provider: "openclaw",
+        externalId: null,
+        title: "wrong file",
+        url: null,
+        status: "active",
+        reviewState: "none",
+        isPrimary: false,
+        healthStatus: "unknown",
+        summary: null,
+        metadata: { path: wrongPath },
+        createdByRunId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]);
+
+    const res = await request(createApp()).patch("/api/issues/issue-1").send({ status: "done" });
+
+    expect(res.status).toBe(422);
+    expect(res.body.error).toContain("Exact deliverable path evidence required");
+    expect(res.body.details.expectedPaths).toEqual([expectedPath]);
+    expect(mockIssueService.update).not.toHaveBeenCalled();
+  });
+
+  it("allows closing a single-owner deliverable issue when the work product path matches the requested path", async () => {
+    const expectedPath = path.join(os.tmpdir(), `paperclip-match-${Date.now()}.html`);
+    writeFileSync(expectedPath, "<!doctype html><title>match</title>");
+
+    mockIssueService.getById.mockResolvedValue({
+      id: "issue-1",
+      companyId: "company-1",
+      identifier: "ALQ-202",
+      title: "Audit site and deliver HTML report",
+      description: `Ejecución de owner único. Guarda el archivo en ${expectedPath}.`,
+      status: "in_progress",
+      assigneeAgentId: null,
+      assigneeUserId: null,
+      createdByUserId: "user-1",
+    });
+    mockWorkProductService.listForIssue.mockResolvedValue([
+      {
+        id: "wp-1",
+        companyId: "company-1",
+        projectId: null,
+        issueId: "issue-1",
+        executionWorkspaceId: null,
+        runtimeServiceId: null,
+        type: "document",
+        provider: "openclaw",
+        externalId: null,
+        title: "matching file",
+        url: null,
+        status: "active",
+        reviewState: "none",
+        isPrimary: false,
+        healthStatus: "unknown",
+        summary: null,
+        metadata: { path: expectedPath },
+        createdByRunId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]);
+
+    const res = await request(createApp()).patch("/api/issues/issue-1").send({ status: "done" });
+
+    expect(res.status).toBe(200);
+    expect(mockIssueService.update).toHaveBeenCalledWith("issue-1", { status: "done" });
+  });
 });

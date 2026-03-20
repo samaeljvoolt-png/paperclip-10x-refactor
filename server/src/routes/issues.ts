@@ -42,10 +42,18 @@ import type { Issue, IssueWorkProduct } from "@paperclipai/shared";
 const MAX_ISSUE_COMMENT_LIMIT = 500;
 const DELIVERABLE_HINT_PATTERN =
   /\b(deliver|deliverable|artifact|report|html|file|output|preview|pull request|branch|commit|web app|sandbox|work product)\b/i;
+const SINGLE_OWNER_HINT_PATTERN = /\b(single-owner execution|ejecución de owner único)\b/i;
+const ABSOLUTE_FILE_PATH_PATTERN =
+  /(?:^|[\s("'`])((?:\/|~\/)[^\s"'`<>]+?\.[A-Za-z0-9._-]+)(?=$|[\s)"'`<>])/g;
 
 function issueRequiresDeliverableEvidence(issue: Pick<Issue, "title" | "description">): boolean {
   const haystack = `${issue.title}\n${issue.description ?? ""}`;
   return DELIVERABLE_HINT_PATTERN.test(haystack);
+}
+
+function issueHasSingleOwnerConstraint(issue: Pick<Issue, "title" | "description">): boolean {
+  const haystack = `${issue.title}\n${issue.description ?? ""}`;
+  return SINGLE_OWNER_HINT_PATTERN.test(haystack);
 }
 
 function extractWorkProductPath(product: IssueWorkProduct): string | null {
@@ -72,6 +80,27 @@ function isExistingAbsoluteFile(path: string): boolean {
   }
 }
 
+function normalizeRequestedDeliverablePath(value: string): string {
+  const trimmed = value.trim().replace(/[),;:!?]+$/g, "").replace(/\.$/g, "");
+  if (trimmed.startsWith("~/")) {
+    return trimmed.replace(/^~(?=\/)/, process.env.HOME ?? "~");
+  }
+  return trimmed;
+}
+
+function extractRequestedDeliverablePaths(issue: Pick<Issue, "title" | "description">): string[] {
+  const haystack = `${issue.title}\n${issue.description ?? ""}`;
+  const paths = new Set<string>();
+  for (const match of haystack.matchAll(ABSOLUTE_FILE_PATH_PATTERN)) {
+    const raw = match[1]?.trim();
+    if (!raw) continue;
+    if (raw.startsWith("/api/")) continue;
+    if (raw.startsWith("/Users/[]/")) continue;
+    paths.add(normalizeRequestedDeliverablePath(raw));
+  }
+  return [...paths];
+}
+
 function hasVerifiableDeliverable(products: IssueWorkProduct[]): boolean {
   for (const product of products) {
     if (product.type === "artifact" || product.type === "document") {
@@ -90,6 +119,19 @@ function hasVerifiableDeliverable(products: IssueWorkProduct[]): boolean {
     ) {
       if (typeof product.url === "string" && product.url.trim().length > 0) return true;
       if (typeof product.externalId === "string" && product.externalId.trim().length > 0) return true;
+    }
+  }
+  return false;
+}
+
+function matchesRequestedDeliverablePath(products: IssueWorkProduct[], expectedPaths: string[]): boolean {
+  if (expectedPaths.length === 0) return true;
+  const normalized = new Set(expectedPaths.map((entry) => normalizeRequestedDeliverablePath(entry)));
+  for (const product of products) {
+    const localPath = extractWorkProductPath(product);
+    if (!localPath) continue;
+    if (normalized.has(normalizeRequestedDeliverablePath(localPath)) && isExistingAbsoluteFile(localPath)) {
+      return true;
     }
   }
   return false;
@@ -901,6 +943,22 @@ export function issueRoutes(db: Db, storage: StorageService) {
             identifier: existing.identifier,
             hint:
               "Create a work product first. For file deliverables, use type artifact/document with metadata.path set to an existing absolute file path or a durable URL. For app/code deliverables, use preview_url/runtime_service/pull_request/branch/commit with a verifiable url or externalId.",
+          },
+        });
+        return;
+      }
+      const explicitPaths = issueHasSingleOwnerConstraint(existing)
+        ? extractRequestedDeliverablePaths(existing)
+        : [];
+      if (!matchesRequestedDeliverablePath(workProducts, explicitPaths)) {
+        res.status(422).json({
+          error: "Exact deliverable path evidence required before closing this issue",
+          details: {
+            issueId: existing.id,
+            identifier: existing.identifier,
+            expectedPaths: explicitPaths,
+            hint:
+              "This single-owner issue asked for a deliverable at a specific absolute path. Register a work product whose metadata.path exactly matches one of the requested paths before marking the issue done.",
           },
         });
         return;

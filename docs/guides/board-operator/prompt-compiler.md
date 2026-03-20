@@ -112,3 +112,9 @@ Use manual mode for:
 - tiny one-line backlog items
 - obvious personal reminders
 - low-value throwaway tasks
+
+## Real Validation
+
+For the live Oracle validation battery, delivered artifacts, issue IDs, and operational findings, see:
+
+- [prompt-compiler-validation.md](/Users/tomasvallejo/Desktop/paperclip/docs/guides/board-operator/prompt-compiler-validation.md)

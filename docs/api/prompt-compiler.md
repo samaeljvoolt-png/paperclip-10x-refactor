@@ -144,3 +144,11 @@ Stored documents:
 - `compiled_brief`
 
 This keeps the feature rollback-safe and avoids schema churn while preserving full traceability.
+
+## Real Validation Battery
+
+The API and routing behavior described here was validated against the live Oracle instance with real multi-agent issues and persisted deliverables.
+
+Reference:
+
+- [prompt-compiler-validation.md](/Users/tomasvallejo/Desktop/paperclip/docs/guides/board-operator/prompt-compiler-validation.md)

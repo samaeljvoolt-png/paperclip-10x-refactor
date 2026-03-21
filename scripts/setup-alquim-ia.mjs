@@ -564,7 +564,13 @@ async function collectProviderSetup(args) {
   };
 }
 
-async function runOpenClawOnboard({ providerSetup, openclawHome, gatewayPort, dryRun = false }) {
+async function runOpenClawOnboard({
+  providerSetup,
+  openclawHome,
+  gatewayPort,
+  gatewayToken,
+  dryRun = false,
+}) {
   const args = buildOpenClawOnboardArgs(providerSetup.provider, {
     apiKey: providerSetup.apiKey,
     gatewayPort,
@@ -583,6 +589,9 @@ async function runOpenClawOnboard({ providerSetup, openclawHome, gatewayPort, dr
   };
   if (providerSetup.apiKey) {
     env[providerSetup.provider.envVar] = providerSetup.apiKey;
+  }
+  if (gatewayToken) {
+    env.OPENCLAW_GATEWAY_TOKEN = gatewayToken;
   }
   const result = await execCapture("openclaw", args, { env, stream: true });
   if (result.code !== 0) {
@@ -892,11 +901,16 @@ async function main() {
     await ensurePnpmAvailable({ dryRun });
     await ensureRepoDependencies({ dryRun });
 
-    if (!args["skip-openclaw-onboard"]) {
-      await runOpenClawOnboard({ providerSetup, openclawHome, gatewayPort: openclawGatewayPort, dryRun });
-    }
-
     const gatewayToken = await ensureGatewayToken({ openclawHome, dryRun });
+    if (!args["skip-openclaw-onboard"]) {
+      await runOpenClawOnboard({
+        providerSetup,
+        openclawHome,
+        gatewayPort: openclawGatewayPort,
+        gatewayToken,
+        dryRun,
+      });
+    }
     const mergedAgents = await createMergedAgentsBundle({ privateBundleDir, dryRun });
     const mergedSkills = await createMergedSkillsBundle({ privateBundleDir, openclawHome, dryRun });
     try {

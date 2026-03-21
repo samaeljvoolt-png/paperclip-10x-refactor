@@ -71,7 +71,7 @@ Use this path if you want the least friction and are installing from scratch.
 ./scripts/setup-alquim-ia.sh
 ```
 
-The wizard first verifies that the repo is already cloned and that both `git` and `curl` are on `PATH`. If either tool is missing, the script automatically installs it through the available package manager (apt/dnf/pacman on Linux, Homebrew on macOS) before continuing; you no longer need to preflight them manually.
+The wizard first asks you whether you prefer English or Spanish, and on macOS/Linux it validates/installs `git` + `curl` before proceeding. On Windows the wizard detects that you’re on a PC, offers to install WSL2 + Ubuntu (if needed), and then reminds you to restart, open the Ubuntu terminal, and rerun `./scripts/setup-alquim-ia.sh` from that shell.
 
 The wrapper is designed to keep the operator out of the weeds. It validates `curl`, `git`, `bash`, `node`, `pnpm`, and `openclaw`; if `openclaw` is missing, it installs the public version through the official installer.
 

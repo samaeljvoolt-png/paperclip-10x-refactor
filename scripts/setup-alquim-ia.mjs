@@ -213,6 +213,61 @@ function buildInstallGuidance(platform) {
   return "Use macOS or Linux for this setup.";
 }
 
+const WINDOWS_LOCALES = {
+  en: {
+    chooseLanguage: "Choose your language for the setup wizard:",
+    installPrompt: "I detected Windows. Shall I install WSL2 + Ubuntu so the Linux wizard can run? (requires reboot)",
+    installDisabled: "Homebrew or a supported Linux package manager is required to bootstrap the missing tools; install manually and rerun.",
+    wslInstalled: "WSL2 + Ubuntu was installed. Restart your computer, then open the Ubuntu terminal, navigate to the repo, and rerun ./scripts/setup-alquim-ia.sh inside Ubuntu.",
+    wslAlready: "WSL2 is already installed. Please open Ubuntu (via Windows Terminal) and rerun ./scripts/setup-alquim-ia.sh from there.",
+  },
+  es: {
+    chooseLanguage: "Elige tu idioma para el asistente de instalación:",
+    installPrompt: "Detecté Windows. ¿Quieres instalar WSL2 + Ubuntu para ejecutar el wizard en Linux? (requiere reinicio)",
+    installDisabled: "Necesitas Homebrew o un gestor compatible para instalar las herramientas; instálalas manualmente y vuelve a ejecutar el script.",
+    wslInstalled: "WSL2 + Ubuntu ya se instaló. Reinicia el equipo, abre la terminal de Ubuntu, ve al repo y ejecuta ./scripts/setup-alquim-ia.sh dentro de Ubuntu.",
+    wslAlready: "WSL2 ya está instalado. Abre Ubuntu (por ejemplo con Windows Terminal) y vuelve a ejecutar ./scripts/setup-alquim-ia.sh desde allí.",
+  },
+};
+
+let userLanguage = "en";
+
+async function chooseLanguage(rl) {
+  if (!rl) return "en";
+  const choice = await promptChoice(rl, "Choose the setup language / Elige el idioma del asistente:", [
+    { id: "en", label: "English" },
+    { id: "es", label: "Español" },
+  ]);
+  userLanguage = choice.id;
+  return choice.id;
+}
+
+async function handleWindowsFlow({ args, rl }) {
+  if (detectPlatform() !== "win32") {
+    userLanguage = (args.language ?? "en").startsWith("es") ? "es" : "en";
+    return false;
+  }
+
+  const locale = WINDOWS_LOCALES;
+  const lang = args.language ? (args.language.startsWith("es") ? "es" : "en") : await chooseLanguage(rl);
+  const strings = locale[lang];
+
+  if (!commandExists("wsl")) {
+    const shouldInstall = args.yes ? true : await promptConfirm(rl, strings.installPrompt, true);
+    if (!shouldInstall) {
+      stdout.write("Cancelling setup. Install WSL2 manually and re-run the script.\n");
+      return true;
+    }
+    stdout.write(`${strings.installPrompt} Running: wsl --install -d Ubuntu\n`);
+    await runInstall("wsl", ["--install", "-d", "Ubuntu"]);
+    stdout.write(`${strings.wslInstalled}\n`);
+    return true;
+  }
+
+  stdout.write(`${strings.wslAlready}\n`);
+  return true;
+}
+
 async function checkPrerequisites() {
   const platform = process.platform;
   if (!["darwin", "linux"].includes(platform)) {
@@ -740,79 +795,62 @@ async function main() {
     return;
   }
 
-  await checkPrerequisites();
+  const rl = args.yes ? null : createPromptInterface();
+  try {
+    if (await handleWindowsFlow({ args, rl })) {
+      return;
+    }
+    await checkPrerequisites();
 
-  const openclawHome = ensureAbsoluteMaybeHome(args["openclaw-home"] ?? deriveOpenClawHome());
-  const privateConfigPath = ensureAbsoluteMaybeHome(args["private-config"] ?? DEFAULT_PRIVATE_CONFIG);
-  const privateBundleDir = ensureAbsoluteMaybeHome(args["private-bundle"] ?? DEFAULT_PRIVATE_BUNDLE_DIR);
-  const companyName = args["company-name"] ?? "Alquim-IA";
-  const openclawGatewayPort =
-    args["openclaw-gateway-port"] !== undefined
-      ? Number(args["openclaw-gateway-port"])
-      : DEFAULT_OPENCLAW_GATEWAY_PORT;
-  const defaultPaperclipPort = Number(new URL(DEFAULT_PAPERCLIP_API_URL).port || "3100");
-  const paperclipPort =
-    args["paperclip-port"] !== undefined ? Number(args["paperclip-port"]) : defaultPaperclipPort;
-  const paperclipApiUrl = (
-    args["paperclip-api-url"] ?? `http://127.0.0.1:${paperclipPort || 3100}`
-  ).replace(/\/+$/, "");
-  const paperclipPublicUrl = (args["paperclip-public-url"] ?? paperclipApiUrl).replace(/\/+$/, "");
-  const paperclipHome = args["paperclip-data-dir"]
-    ? ensureAbsoluteMaybeHome(args["paperclip-data-dir"])
-    : null;
-  const statePaths = buildSetupStatePaths({ paperclipHome, privateConfigPath });
-  const dryRun = Boolean(args["dry-run"]);
+    const openclawHome = ensureAbsoluteMaybeHome(args["openclaw-home"] ?? deriveOpenClawHome());
+    const privateConfigPath = ensureAbsoluteMaybeHome(args["private-config"] ?? DEFAULT_PRIVATE_CONFIG);
+    const privateBundleDir = ensureAbsoluteMaybeHome(args["private-bundle"] ?? DEFAULT_PRIVATE_BUNDLE_DIR);
+    const companyName = args["company-name"] ?? "Alquim-IA";
+    const openclawGatewayPort =
+      args["openclaw-gateway-port"] !== undefined
+        ? Number(args["openclaw-gateway-port"])
+        : DEFAULT_OPENCLAW_GATEWAY_PORT;
+    const defaultPaperclipPort = Number(new URL(DEFAULT_PAPERCLIP_API_URL).port || "3100");
+    const paperclipPort =
+      args["paperclip-port"] !== undefined ? Number(args["paperclip-port"]) : defaultPaperclipPort;
+    const paperclipApiUrl = (
+      args["paperclip-api-url"] ?? `http://127.0.0.1:${paperclipPort || 3100}`
+    ).replace(/\/+$/, "");
+    const paperclipPublicUrl = (args["paperclip-public-url"] ?? paperclipApiUrl).replace(/\/+$/, "");
+    const paperclipHome = args["paperclip-data-dir"]
+      ? ensureAbsoluteMaybeHome(args["paperclip-data-dir"])
+      : null;
+    const statePaths = buildSetupStatePaths({ paperclipHome, privateConfigPath });
+    const dryRun = Boolean(args["dry-run"]);
 
-  const providerSetup = await collectProviderSetup(args);
-  providerSetup.skipDaemonInstall = Boolean(args["skip-openclaw-daemon"]);
+    const providerSetup = await collectProviderSetup(args);
+    providerSetup.skipDaemonInstall = Boolean(args["skip-openclaw-daemon"]);
 
-  if (!args["skip-openclaw-install"] && !commandExists("openclaw")) {
-    await installOrUpdateOpenClaw({ dryRun });
-  } else if (!args["skip-openclaw-install"]) {
-    const rl = !args.yes ? createPromptInterface() : null;
-    try {
+    if (!args["skip-openclaw-install"] && !commandExists("openclaw")) {
+      await installOrUpdateOpenClaw({ dryRun });
+    } else if (!args["skip-openclaw-install"]) {
       const shouldUpdate = args.yes
         ? false
         : await promptConfirm(rl, "OpenClaw already exists. Do you want to update it to the latest public version?", false);
       if (shouldUpdate) {
         await installOrUpdateOpenClaw({ dryRun });
       }
-    } finally {
-      rl?.close();
     }
-  }
-  if (!commandExists("openclaw") && !dryRun) {
-    throw new Error("OpenClaw CLI is still unavailable after the install step.");
-  }
+    if (!commandExists("openclaw") && !dryRun) {
+      throw new Error("OpenClaw CLI is still unavailable after the install step.");
+    }
 
-  await ensurePnpmAvailable({ dryRun });
-  await ensureRepoDependencies({ dryRun });
+    await ensurePnpmAvailable({ dryRun });
+    await ensureRepoDependencies({ dryRun });
 
-  if (!args["skip-openclaw-onboard"]) {
-    await runOpenClawOnboard({ providerSetup, openclawHome, gatewayPort: openclawGatewayPort, dryRun });
-  }
+    if (!args["skip-openclaw-onboard"]) {
+      await runOpenClawOnboard({ providerSetup, openclawHome, gatewayPort: openclawGatewayPort, dryRun });
+    }
 
-  const gatewayToken = await ensureGatewayToken({ openclawHome, dryRun });
-  const mergedAgents = await createMergedAgentsBundle({ privateBundleDir, dryRun });
-  const mergedSkills = await createMergedSkillsBundle({ privateBundleDir, openclawHome, dryRun });
-
-  const privateConfig = buildBootstrapPrivateConfig({
-    companyName,
-    paperclipApiUrl,
-    paperclipAgentReachableApiUrl: paperclipPublicUrl,
-    gatewayUrl: `ws://127.0.0.1:${openclawGatewayPort}`,
-    gatewayToken,
-    agentsSourceDir: mergedAgents.rootDir,
-    installAgentsDir: path.join(openclawHome, "agents"),
-    claimsDir: path.join(openclawHome, ".openclaw", "workspace", "claims"),
-    skillsSourceDir: mergedSkills.rootDir,
-    installSkillsDir: mergedSkills.targetDir,
-  });
-
-  await writePrivateConfig(privateConfigPath, privateConfig, dryRun);
-
-  try {
-    if (!args["skip-paperclip-start"]) {
+    const gatewayToken = await ensureGatewayToken({ openclawHome, dryRun });
+    const mergedAgents = await createMergedAgentsBundle({ privateBundleDir, dryRun });
+    const mergedSkills = await createMergedSkillsBundle({ privateBundleDir, openclawHome, dryRun });
+    try {
       await ensurePaperclipRunning({
         apiUrl: paperclipApiUrl,
         paperclipHome,
@@ -821,34 +859,54 @@ async function main() {
         statePaths,
         dryRun,
       });
-    }
 
-    if (!args["skip-bootstrap"]) {
-      await runBootstrap({ privateConfigPath, companyName, dryRun });
-    }
-  } finally {
-    await mergedAgents.cleanup();
-    await mergedSkills.cleanup();
-  }
-
-  console.log(
-    JSON.stringify(
-      {
-        ok: true,
-        companyName,
-        openclawHome,
-        privateConfigPath,
+      const privateConfigResult = await buildBootstrapPrivateConfig({
+        providerSetup,
+        gatewayToken,
         privateBundleDir,
+        privateConfigPath,
         paperclipApiUrl,
         paperclipPublicUrl,
-        paperclipHome,
-        provider: providerSetup.provider.id,
-        installedPublicSkillsFrom: PUBLIC_SKILLS_DIR,
-      },
-      null,
-      2,
-    ),
-  );
+        openclawHome,
+        mergedAgents,
+        mergedSkills,
+        openclawGatewayPort,
+        dryRun,
+      });
+
+      if (!dryRun) {
+        await writePrivateConfig(privateConfigPath, privateConfigResult.privateConfig);
+      }
+
+      if (!args["skip-bootstrap"]) {
+        await runBootstrap({ privateConfigPath, companyName, dryRun });
+      }
+
+      console.log(
+        JSON.stringify(
+          {
+            ok: true,
+            companyName,
+            openclawHome,
+            privateConfigPath,
+            privateBundleDir,
+            paperclipApiUrl,
+            paperclipPublicUrl,
+            paperclipHome,
+            provider: providerSetup.provider.id,
+            installedPublicSkillsFrom: PUBLIC_SKILLS_DIR,
+          },
+          null,
+          2,
+        ),
+      );
+    } finally {
+      await mergedAgents.cleanup();
+      await mergedSkills.cleanup();
+    }
+  } finally {
+    rl?.close();
+  }
 }
 
 main().catch((error) => {

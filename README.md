@@ -71,6 +71,8 @@ Use this path if you want the least friction and are installing from scratch.
 ./scripts/setup-alquim-ia.sh
 ```
 
+The wizard first verifies that the repo is already cloned and that both `git` and `curl` are on `PATH`. If either tool is missing, the script automatically installs it through the available package manager (apt/dnf/pacman on Linux, Homebrew on macOS) before continuing; you no longer need to preflight them manually.
+
 The wrapper is designed to keep the operator out of the weeds. It validates `curl`, `git`, `bash`, `node`, `pnpm`, and `openclaw`; if `openclaw` is missing, it installs the public version through the official installer.
 
 After that, it moves through OpenClaw onboarding, captures the gateway token, writes the private bootstrap config, and finishes by running the Paperclip bootstrap step.

@@ -123,6 +123,48 @@ function commandExists(command) {
   return result.status === 0;
 }
 
+function detectLinuxPackageManager() {
+  if (commandExists("apt-get")) return "apt";
+  if (commandExists("dnf")) return "dnf";
+  if (commandExists("pacman")) return "pacman";
+  return null;
+}
+
+async function runInstall(command, args) {
+  const { code } = await execCapture(command, args, { stream: true });
+  if (code !== 0) {
+    throw new Error(`Failed to run ${command} ${args.join(" ")} (exit ${code})`);
+  }
+}
+
+async function installMissingCommands(packages) {
+  if (process.platform === "darwin") {
+    if (!commandExists("brew")) {
+      throw new Error("Homebrew is required to install missing packages on macOS.");
+    }
+    await runInstall("brew", ["install", ...packages]);
+    return;
+  }
+
+  const manager = detectLinuxPackageManager();
+  if (!manager) {
+    throw new Error("No supported Linux package manager (apt, dnf, pacman) was found.");
+  }
+  if (manager === "apt") {
+    await runInstall("sudo", ["apt-get", "update"]);
+    await runInstall("sudo", ["apt-get", "install", "-y", ...packages]);
+    return;
+  }
+  if (manager === "dnf") {
+    await runInstall("sudo", ["dnf", "install", "-y", ...packages]);
+    return;
+  }
+  if (manager === "pacman") {
+    await runInstall("sudo", ["pacman", "-Sy", ...packages]);
+    return;
+  }
+}
+
 function execCapture(command, args, options = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
@@ -182,7 +224,12 @@ async function checkPrerequisites() {
     if (!commandExists(command)) missing.push(command);
   }
   if (missing.length > 0) {
-    throw new Error(`Missing required command(s): ${missing.join(", ")}. ${buildInstallGuidance(platform)}`);
+    stdout.write(`Missing command(s) detected: ${missing.join(", ")}. Attempting to install dependencies...\n`);
+    await installMissingCommands(missing);
+    const remaining = missing.filter((command) => !commandExists(command));
+    if (remaining.length > 0) {
+      throw new Error(`Still missing required command(s): ${remaining.join(", ")} after attempted install. ${buildInstallGuidance(platform)}`);
+    }
   }
 }
 

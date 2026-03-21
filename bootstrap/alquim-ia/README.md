@@ -1,81 +1,90 @@
-# Bootstrap de Alquim-IA en un comando
+# Alquim-IA Bootstrap in One Command
 
-Este perfil empaqueta la parte pública y reproducible de la empresa `Alquim-IA`:
+This profile packages the public, reproducible part of the `Alquim-IA` company:
 
-- metadatos de la empresa
-- roster curado de agentes
-- jerarquía (`reportsTo`)
-- roles y prompt templates
-- documentos de gobierno de organización y skills
+- company metadata
+- curated agent roster
+- reporting hierarchy (`reportsTo`)
+- roles and prompt templates
+- organization and skills governance docs
 
-Intencionalmente **no** incluye:
+It intentionally does **not** include:
 
-- token del gateway de OpenClaw
-- llaves de dispositivo
-- claim files activos
-- secretos de Better Auth
-- API keys reales
+- the OpenClaw gateway token
+- active device keys
+- live claim files
+- Better Auth secrets
+- real API keys
 
-## División pública vs privada
+## Public vs Private Split
 
-Usa:
+Use:
 
-- `bootstrap/alquim-ia/public/` para el perfil público versionado
-- un JSON privado para los secretos reales
-- un repo o carpeta privada opcional con tus workspaces reales de OpenClaw
+- `bootstrap/alquim-ia/public/` for the versioned public profile
+- a private JSON file for real secrets
+- an optional private repo or directory for your actual OpenClaw workspaces
 
-## Instalación guiada para principiantes
+## Beginner-Friendly Setup
 
-Si quieres la experiencia más simple posible, usa el wrapper:
+If you want the simplest possible path, run the wrapper:
 
 ```bash
 ./scripts/setup-alquim-ia.sh
 ```
 
-Ese setup hace esto:
+That setup performs these steps:
 
-1. valida macOS/Linux + `curl` + `git`
-2. instala la versión pública de OpenClaw si no existe
-3. activa `pnpm` si falta
-4. te pide solo la API key del proveedor de modelos
-5. ejecuta `openclaw onboard` en modo no interactivo
-6. genera/recupera el gateway token automáticamente
-7. instala el árbol de agentes de Alquim-IA en `~/.openclaw/agents`
-8. instala las skills públicas del repo en `~/.openclaw/skills`
-9. aplica un bundle privado opcional si existe en `~/.config/paperclip-bootstrap/alquim-ia.bundle`
-10. arranca Paperclip local
-11. bootstrapea la empresa `Alquim-IA`
+1. validates macOS/Linux, `curl`, and `git`
+2. installs the public OpenClaw release if it is missing
+3. activates `pnpm` if needed
+4. asks only for the model provider API key
+5. runs `openclaw onboard` in non-interactive mode
+6. generates or recovers the gateway token automatically
+7. installs the Alquim-IA agent tree into `~/.openclaw/agents`
+8. installs the public skills from this repo into `~/.openclaw/skills`
+9. applies an optional private bundle from `~/.config/paperclip-bootstrap/alquim-ia.bundle`
+10. starts local Paperclip
+11. bootstraps the `Alquim-IA` company
 
-## Un solo comando avanzado
+## Advanced One-Command Bootstrap
 
 ```bash
 pnpm bootstrap:alquim-ia --private-config ~/.config/paperclip-bootstrap/alquim-ia.private.json
 ```
 
-## Configuración privada
+## Private Configuration
 
-Parte de:
+Start from:
 
 ```text
 bootstrap/alquim-ia/private-config.example.json
 ```
 
-Y cópialo a:
+Copy it to:
 
 ```text
 ~/.config/paperclip-bootstrap/alquim-ia.private.json
 ```
 
-Ese instalador va a:
+Then fill in the real values for:
 
-1. importar o actualizar la empresa `Alquim-IA`
-2. configurar todos los agentes `openclaw_gateway` con tu URL/token reales
-3. generar un claim file por agente
-4. copiar tus carpetas privadas de agentes OpenClaw a `~/.openclaw/agents`
-5. copiar tus skills privadas de OpenClaw a `~/.openclaw/skills`
-6. verificar que la empresa quede bien armada
+- `paperclip.apiUrl`
+- `paperclip.agentReachableApiUrl`
+- `openclaw.gatewayUrl`
+- `openclaw.gatewayToken`
+- `openclaw.agentsSourceDir`
+- `openclaw.skillsSourceDir`
 
-## Contenido del perfil público
+The installer will then:
+
+1. import or update the `Alquim-IA` company
+2. configure all `openclaw_gateway` agents with your real URL and token
+3. generate one claim file per agent
+4. copy your private OpenClaw agent folders into `~/.openclaw/agents`
+5. copy your private OpenClaw skills into `~/.openclaw/skills`
+6. verify that the company is wired correctly
+
+## What Ships in the Public Profile
 
 - `public/paperclip.manifest.json`
 - `public/COMPANY.md`
@@ -83,11 +92,11 @@ Ese instalador va a:
 - `public/docs/ORGANIZATION.md`
 - `public/docs/SKILLS.md`
 
-## Notas
+## Operational Notes
 
-- El perfil público excluye agentes efímeros de smoke usados solo durante la refactorización.
-- El instalador es idempotente: si ya existe una empresa llamada `Alquim-IA`, la actualiza en vez de duplicarla.
-- Para paridad total con tu stack privado, crea un bundle opcional en `~/.config/paperclip-bootstrap/alquim-ia.bundle` con:
+- The public profile excludes ephemeral smoke agents that existed only for refactor QA.
+- The installer is idempotent: if a company named `Alquim-IA` already exists, it updates it instead of duplicating it.
+- For full parity with your private stack, create an optional bundle at `~/.config/paperclip-bootstrap/alquim-ia.bundle` with:
   - `agents/<slug>/AGENTS.md`
   - `skills/<skill>/SKILL.md`
   - `docs/ORGANIZATION.md`

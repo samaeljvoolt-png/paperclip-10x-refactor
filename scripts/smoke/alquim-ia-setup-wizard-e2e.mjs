@@ -232,11 +232,11 @@ async function main() {
       body: JSON.stringify({
         title: "Strict single-owner runbook smoke",
         description:
-          `Single-owner execution. Escribe un runbook operativo breve en español. ` +
-          `Guarda el archivo exactamente en ${requestedPath}. ` +
-          `Luego registra un work product tipo document con provider=openclaw, ` +
-          `title legible y metadata.path igual a esa misma ruta absoluta. ` +
-          `Comenta un resumen en español y marca la issue como done.`,
+          `Single-owner execution. Write a short operational runbook in English. ` +
+          `Save the file exactly at ${requestedPath}. ` +
+          `Then register a document work product with provider=openclaw, ` +
+          `a readable title, and metadata.path set to that same absolute path. ` +
+          `Add a short summary comment in English and mark the issue as done.`,
         status: "todo",
         assigneeAgentId: sammy.id,
         priority: "medium",

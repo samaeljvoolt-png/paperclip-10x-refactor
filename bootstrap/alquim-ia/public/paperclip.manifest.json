@@ -319,7 +319,7 @@
         },
         "source": "openclaw",
         "identity": {
-          "vibe": "Analítico, protector, crítico.",
+          "vibe": "Analytical, protective, critical.",
           "emoji": "🛡️"
         },
         "sourceModel": "bailian/glm-5",
@@ -754,7 +754,7 @@
         },
         "source": "openclaw",
         "identity": {
-          "vibe": "Directo, provocador, informativo.",
+          "vibe": "Direct, provocative, informative.",
           "emoji": "🧵"
         },
         "sourceModel": "xai/grok-4-fast-reasoning",
@@ -883,7 +883,7 @@
         },
         "source": "openclaw",
         "identity": {
-          "vibe": "Meticuloso, pedagógico, autoritario.",
+          "vibe": "Meticulous, educational, authoritative.",
           "emoji": "✍️"
         },
         "sourceModel": "minimax/MiniMax-M2.5",
@@ -1101,7 +1101,7 @@
         },
         "source": "openclaw",
         "identity": {
-          "vibe": "Sofisticado, minimalista, técnico.",
+          "vibe": "Sophisticated, minimalist, technical.",
           "emoji": "🖼️"
         },
         "sourceModel": "openai/gpt-5.4-mini",

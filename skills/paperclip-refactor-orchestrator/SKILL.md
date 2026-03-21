@@ -54,13 +54,13 @@ Use ephemeral agents only for a real bottleneck. Never exceed six active agents 
 
 Every checkpoint must include:
 
-- `Fase/Ola`
-- `Objetivo`
-- `Estado`
-- `Hecho`
-- `Riesgos`
-- `Bloqueos`
-- `Siguiente paso`
+- `Phase/Wave`
+- `Objective`
+- `Status`
+- `Completed`
+- `Risks`
+- `Blockers`
+- `Next step`
 
 ## Operating Constraints
 

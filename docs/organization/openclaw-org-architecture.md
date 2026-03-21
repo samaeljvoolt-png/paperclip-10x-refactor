@@ -39,7 +39,7 @@ These agents are routing points, not centers of power.
 - Sammy
 - Laura Agency Bot
 
-They may relay work, approve execution context, or bridge legacy behavior, but they should not bypass the CEO/CTO/CMO/CFO ladder.
+They may relay work, approve execution context, or bridge legacy behavior, but they should not bypass the CEO/CTO/CMO/CFO ladder or create a second authority path.
 
 ### Level 2: Functional Leads
 
@@ -172,6 +172,7 @@ Use lateral communication sparingly.
 - If a role is ambiguous, report to the nearest lead that owns the output.
 - Status should move upward; work should move downward.
 - Avoid parallel authority paths for legacy controllers.
+- Treat gateways as routing layers, not decision makers.
 
 ## What Makes The UI Look Better
 

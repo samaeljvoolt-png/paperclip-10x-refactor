@@ -8,7 +8,7 @@ This document records the real multi-agent validation battery executed against t
 - Health endpoint: `http://127.0.0.1:3100/api/health`
 - Company ID: `05100f6d-b0a4-4a15-b785-61949b90c6df`
 - Adapter under test: `openclaw_gateway`
-- Language policy: final reports and user-facing summaries in Spanish
+- Language policy: final reports and user-facing summaries were written in Spanish for this validation run
 
 ## Goal
 
@@ -32,10 +32,10 @@ The validation battery uncovered routing edge cases and led to these changes:
 
 Relevant code:
 
-- [prompt-compiler.ts](/Users/tomasvallejo/Desktop/paperclip/server/src/services/prompt-compiler.ts)
-- [execute.ts](/Users/tomasvallejo/Desktop/paperclip/packages/adapters/openclaw-gateway/src/server/execute.ts)
-- [prompt-compiler.test.ts](/Users/tomasvallejo/Desktop/paperclip/server/src/__tests__/prompt-compiler.test.ts)
-- [openclaw-gateway-adapter.test.ts](/Users/tomasvallejo/Desktop/paperclip/server/src/__tests__/openclaw-gateway-adapter.test.ts)
+- [prompt-compiler.ts](../../../server/src/services/prompt-compiler.ts)
+- [execute.ts](../../../packages/adapters/openclaw-gateway/src/server/execute.ts)
+- [prompt-compiler.test.ts](../../../server/src/__tests__/prompt-compiler.test.ts)
+- [openclaw-gateway-adapter.test.ts](../../../server/src/__tests__/openclaw-gateway-adapter.test.ts)
 
 ## Real Test Cases
 
@@ -52,7 +52,7 @@ What was validated:
 
 - Prompt Compiler routing to `Sammy`
 - single-owner execution
-- Spanish artifact generation
+- artifact generation in Spanish
 - work product persistence in Paperclip
 
 ### 2. Risk Register and Cost/Benefit Analysis
@@ -68,7 +68,7 @@ What was validated:
 
 - finance routing to `CFO`
 - no fallback to generic CEO/CTO lanes
-- artifact registration and Spanish summary
+- artifact registration and a Spanish summary
 
 ### 3. QA Checklist
 
@@ -98,7 +98,7 @@ What was validated:
 
 - executive consolidation routing to `Sammy`
 - artifact-based final package generation
-- Spanish final summary and next steps
+- final summary and next steps written in Spanish
 - reuse of previously verified artifacts as inputs
 
 ## Final Deliverables Produced
@@ -115,7 +115,7 @@ What was validated:
 - assignment wakeups reached the correct first owner
 - artifacts were written to stable absolute paths
 - artifacts were registered as work products in Paperclip
-- final operator-facing output remained in Spanish
+- final operator-facing output remained in Spanish for this run
 
 ## Known Operational Caveat
 
@@ -142,12 +142,12 @@ Follow-up recommended:
 The routing and wake hardening introduced during this battery was covered locally with:
 
 ```bash
-pnpm -C /Users/tomasvallejo/Desktop/paperclip/server exec vitest run \
+pnpm -C server exec vitest run \
   src/__tests__/prompt-compiler.test.ts \
   src/__tests__/prompt-compiler-route.test.ts \
   src/__tests__/openclaw-gateway-adapter.test.ts
 
-pnpm -C /Users/tomasvallejo/Desktop/paperclip/server exec tsc --noEmit
+pnpm -C server exec tsc --noEmit
 ```
 
 ## Oracle Validation Run

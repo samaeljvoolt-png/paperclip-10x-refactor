@@ -1,7 +1,7 @@
 <div align="center">
   <strong>Paperclip Refactor Foundation</strong>
   <br/>
-  Public install path for Paperclip + OpenClaw teams, with a guided bootstrap for Alquim-IA.
+  A public, reproducible install path for Paperclip + OpenClaw teams, with a guided Alquim-IA bootstrap.
 </div>
 
 <br/>
@@ -34,7 +34,7 @@ This branch exists so a non-technical operator can get from zero to a working co
 - A one-command bootstrap path for the full Alquim-IA company profile.
 - Preconfigured agents and skills in the public branch.
 - Per-agent claim files instead of one shared global claim file.
-- Exact-path deliverable enforcement for issues that require a file, report, or artifact.
+- Exact-path deliverable enforcement for tasks that require a file, report, or artifact.
 - Reproducible smoke tests for the wizard and orchestration flow.
 - A public/private split so secrets stay out of the branch while the company structure stays reproducible.
 
@@ -142,7 +142,7 @@ What stays private:
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
 | `Instance setup required` or `Instance admin required` | The instance has no first board admin yet | Run `pnpm paperclipai auth bootstrap-ceo` in the Paperclip environment, open the invite URL it generates, and create the first admin. |
-| `OpenClaw no quedó disponible en PATH` after install | The shell has not reloaded PATH or the official installer did not finish cleanly | Open a new terminal, run `hash -r`, verify `command -v openclaw`, and rerun `./scripts/setup-alquim-ia.sh`. |
+| `OpenClaw was not added to PATH` after install | The shell has not reloaded PATH or the official installer did not finish cleanly | Open a new terminal, run `hash -r`, verify `command -v openclaw`, and rerun `./scripts/setup-alquim-ia.sh`. |
 | `Command not found in PATH: "codex"` | A `codex_local` agent was launched but the Codex CLI is not installed or not on PATH | Install the Codex CLI or use a different adapter; for the public Alquim-IA flow, prefer the `openclaw_gateway` agents that do not depend on `codex`. |
 | OpenClaw join or claim never completes | The invite prompt was not generated, pasted, or approved in the right place | Regenerate the invite prompt from Paperclip, paste it into a stock OpenClaw session, approve the join/device request, and retry the task. |
 | A deliverable issue will not close | The issue requires proof of output, not just a comment | Create the file or artifact first, then register a work product with the exact absolute `metadata.path` or a verifiable URL before marking the issue done. |
@@ -152,10 +152,10 @@ What stays private:
 
 For Oracle or any remote deployment, use the same repo flow but keep the boundaries clear:
 
-- public browser traffic should point at the public origin
-- agent callbacks should use the private or internal URL that the gateway can reach
-- the auth bootstrap must happen before the first operator login
-- if you expose the UI behind a reverse proxy, confirm the forwarded host and public URL match the origin you actually use
+- Public browser traffic should point at the public origin.
+- Agent callbacks should use the private or internal URL that the gateway can reach.
+- The auth bootstrap must happen before the first operator login.
+- If you expose the UI behind a reverse proxy, confirm the forwarded host and public URL match the origin you actually use.
 
 ## Reference docs
 

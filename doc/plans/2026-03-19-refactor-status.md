@@ -1,290 +1,274 @@
 # Paperclip Refactor Foundation Status
 
 ## Checkpoint 01
-
-- `Fase/Ola`: `Wave 0`
-- `Objetivo`: instalar el sistema de control, la skill de orquestación y la org base de OpenClaw
-- `Estado`: `Baseline verified`
-- `Hecho`:
-  - se crearon los documentos de control del proyecto
-  - se versionó la skill `paperclip-refactor-orchestrator`
-  - se instaló una copia viva de la skill para OpenClaw
-  - se preparó la org base de 4 agentes
-  - se fijó el baseline real del fork en los artefactos del plan
-- `Riesgos`:
-  - la clave OpenAI dedicada para el conductor debe permanecer solo en runtime local de OpenClaw y rotarse después de esta sesión
-  - el plan original sigue necesitando reinterpretación contra el fork antes de tocar CI o env
-- `Bloqueos`:
-  - ninguno para arrancar Wave 1
-- `Siguiente paso`:
-  - auditar y reinterpretar Wave 1 sobre el estado real de CI, env y bootstrap del fork
+- `Phase/Wave`: `Wave 0`
+- `Goal`: install the control system, the orchestration skill, and the base OpenClaw org
+- `Status`: `Baseline verified`
+- `Done`:
+  - created the project control documents
+  - versioned the `paperclip-refactor-orchestrator` skill
+  - installed a live copy of the skill for OpenClaw
+  - prepared the base four-agent org
+  - locked the real fork baseline into the plan artifacts
+- `Risks`:
+  - the dedicated OpenAI key for the conductor must stay local to OpenClaw runtime and be rotated after this session
+  - the original plan still needs to be reinterpreted against the fork before touching CI or env
+- `Blockers`:
+  - none for starting Wave 1
+- `Next step`:
+  - audit and reinterpret Wave 1 against the real state of CI, env, and fork bootstrap
 
 ## Checkpoint 02
-
-- `Fase/Ola`: `Wave 1`
-- `Objetivo`: alinear CI y contrato de entorno con el estado real del fork, sin romper defaults ni introducir supuestos falsos
-- `Estado`: `Wave 1 verified`
-- `Hecho`:
-  - `pr-verify` quedó como gate puro de install, typecheck, tests y build
-  - se eliminó el release canary dry run del gate de PR
-  - se alineó Node de `pr-verify` con la base soportada del repo
-  - `.env.example` ahora refleja el contrato operativo real del runtime actual
-  - `docs/deploy/environment-variables.md` se amplió con variables reales de config, auth, storage y backup
-  - se dejó explícito que la validación central estricta de env no entra todavía
-- `Riesgos`:
-  - el shell actual no tiene `pnpm`, así que todavía no puedo cerrar esta ola con evidencia completa de ejecución local
-  - la documentación quedó más alineada, pero el diseño de `config.ts` sigue mezclando env, archivo y defaults
-- `Bloqueos`:
-  - falta restablecer `pnpm` o una ruta equivalente para ejecutar la batería mínima local
-- `Siguiente paso`:
-  - resolver la herramienta de validación local y avanzar a `Wave 2` sobre `access/onboarding`
+- `Phase/Wave`: `Wave 1`
+- `Goal`: align CI and the environment contract with the real fork state without breaking defaults or introducing false assumptions
+- `Status`: `Wave 1 verified`
+- `Done`:
+  - `pr-verify` is now a pure gate for install, typecheck, tests, and build
+  - removed the release-canary dry run from the PR gate
+  - aligned `pr-verify` Node with the repo-supported baseline
+  - `.env.example` now reflects the current runtime contract
+  - expanded `docs/deploy/environment-variables.md` with real config, auth, storage, and backup variables
+  - made it explicit that strict central env validation is not in scope yet
+- `Risks`:
+  - the current shell still lacks `pnpm`, so this wave cannot yet be closed with full local execution evidence
+  - the docs are better aligned, but `config.ts` still mixes env, file, and defaults
+- `Blockers`:
+  - restore `pnpm` or an equivalent path to run the minimum local battery
+- `Next step`:
+  - resolve the local validation toolchain and move to Wave 2 on `access/onboarding`
 
 ## Checkpoint 03
-
-- `Fase/Ola`: `Wave 2`
-- `Objetivo`: endurecer onboarding y centralizar la construcción de URL pública sin esperar al split completo de `access`
-- `Estado`: `Wave 2 verified`
-- `Hecho`:
-  - se centralizó la resolución de URL pública en `server/src/utils/public-url.ts`
-  - `access.ts` y `access-onboarding.ts` dejaron de construir URLs públicas con lógica duplicada
-  - la precedencia ahora favorece `PAPERCLIP_AUTH_PUBLIC_BASE_URL`, `BETTER_AUTH_URL`, `BETTER_AUTH_BASE_URL` y `PAPERCLIP_PUBLIC_URL`
-  - se añadieron pruebas unitarias para la utilidad de URL pública
-- `Riesgos`:
-  - el fallback por headers sigue existiendo como comportamiento legacy cuando no hay URL pública configurada
-  - todavía no se completa el split más amplio de `access`
-- `Bloqueos`:
-  - ninguno para iniciar la siguiente extracción incremental de startup
-- `Siguiente paso`:
-  - abrir `Wave 3` con cortes pequeños y reversibles en `server/src/index.ts`
+- `Phase/Wave`: `Wave 2`
+- `Goal`: harden onboarding and centralize public URL construction without waiting for the full `access` split
+- `Status`: `Wave 2 verified`
+- `Done`:
+  - centralized public URL resolution in `server/src/utils/public-url.ts`
+  - `access.ts` and `access-onboarding.ts` no longer duplicate public URL construction logic
+  - precedence now favors `PAPERCLIP_AUTH_PUBLIC_BASE_URL`, `BETTER_AUTH_URL`, `BETTER_AUTH_BASE_URL`, and `PAPERCLIP_PUBLIC_URL`
+  - added unit tests for the public URL utility
+- `Risks`:
+  - the header-based fallback still exists as legacy behavior when no public URL is configured
+  - the larger `access` split is still incomplete
+- `Blockers`:
+  - none for the next incremental startup extraction
+- `Next step`:
+  - open Wave 3 with small, reversible cuts in `server/src/index.ts`
 
 ## Checkpoint 04
-
-- `Fase/Ola`: `Wave 3`
-- `Objetivo`: empezar a reducir acoplamiento en `server/src/index.ts` con una extracción segura y comprobable
-- `Estado`: `Wave 3 in progress`
-- `Hecho`:
-  - se extrajo la validación de modo de despliegue a `server/src/bootstrap/deployment-config.ts`
-  - se añadieron pruebas unitarias específicas para reglas de `local_trusted` y `authenticated/public`
-  - `server/src/index.ts` ya delega esa validación en un módulo aislado
-- `Riesgos`:
-  - `index.ts` y `heartbeat.ts` siguen siendo hotspots grandes
-  - el resto del arranque aún mezcla auth, database, scheduler, backups y runtime env
-- `Bloqueos`:
-  - ninguno inmediato
-- `Siguiente paso`:
-  - extraer el wiring de `authenticated` a un módulo de bootstrap pequeño y volver a validar la matriz completa
+- `Phase/Wave`: `Wave 3`
+- `Goal`: reduce coupling in `server/src/index.ts` with a safe and testable extraction
+- `Status`: `Wave 3 in progress`
+- `Done`:
+  - extracted deployment-mode validation into `server/src/bootstrap/deployment-config.ts`
+  - added dedicated unit tests for `local_trusted` and `authenticated/public`
+  - `server/src/index.ts` now delegates that validation to an isolated module
+- `Risks`:
+  - `index.ts` and `heartbeat.ts` remain large hotspots
+  - the rest of startup still mixes auth, database, scheduler, backups, and runtime env
+- `Blockers`:
+  - none immediate
+- `Next step`:
+  - extract the `authenticated` wiring into a small bootstrap module and revalidate the full matrix
 
 ## Checkpoint 05
-
-- `Fase/Ola`: `Wave 3`
-- `Objetivo`: seguir desacoplando startup con una extracción reversible del bootstrap de autenticación
-- `Estado`: `Wave 3 checkpoint met`
-- `Hecho`:
-  - se extrajo el wiring de `authenticated` a `server/src/bootstrap/authenticated-mode.ts`
-  - `server/src/index.ts` ya no resuelve inline secreto, trusted origins, handler y session resolvers de Better Auth
-  - se añadieron pruebas unitarias para secreto requerido, fallback a `PAPERCLIP_AGENT_JWT_SECRET` y mezcla de trusted origins
-  - la batería mínima del workspace quedó verde otra vez: `pnpm -r typecheck`, `pnpm test:run`, `pnpm build`
-- `Riesgos`:
-  - `index.ts` y `heartbeat.ts` siguen siendo hotspots grandes
-  - todavía falta separar más claramente bootstrap de runtime, backups y scheduler antes de cerrar Wave 3
-- `Bloqueos`:
-  - ninguno inmediato
-- `Siguiente paso`:
-  - elegir el siguiente corte reversible entre runtime env/listen bootstrap y la preparación del terreno para `Wave 4` en heartbeat
+- `Phase/Wave`: `Wave 3`
+- `Goal`: keep decoupling startup with a reversible authentication bootstrap extraction
+- `Status`: `Wave 3 checkpoint met`
+- `Done`:
+  - extracted authenticated-mode wiring into `server/src/bootstrap/authenticated-mode.ts`
+  - `server/src/index.ts` no longer resolves Better Auth secrets, trusted origins, handlers, and session resolvers inline
+  - added unit tests for required secrets, fallback to `PAPERCLIP_AGENT_JWT_SECRET`, and trusted-origin merging
+  - the minimum workspace battery passed again: `pnpm -r typecheck`, `pnpm test:run`, `pnpm build`
+- `Risks`:
+  - `index.ts` and `heartbeat.ts` are still large hotspots
+  - startup, runtime, backups, and scheduler still need clearer separation before Wave 3 can truly close
+- `Blockers`:
+  - none immediate
+- `Next step`:
+  - choose the next reversible cut between runtime env/listen bootstrap and the groundwork for Wave 4 in heartbeat
 
 ## Checkpoint 06
-
-- `Fase/Ola`: `Wave 3`
-- `Objetivo`: desacoplar los schedulers de heartbeat y backups del bootstrap principal
-- `Estado`: `Wave 3 checkpoint met`
-- `Hecho`:
-  - se extrajo el scheduler de heartbeat a `server/src/bootstrap/heartbeat-scheduler.ts`
-  - se extrajo el scheduler de backups a `server/src/bootstrap/database-backup-scheduler.ts`
-  - `server/src/index.ts` ahora solo delega ambos comportamientos periódicos
-  - se añadieron pruebas unitarias para ambos helpers con verificación de wiring y no-op cuando están deshabilitados
-  - la matriz completa volvió a quedar verde: `pnpm -r typecheck`, `pnpm test:run`, `pnpm build`
-- `Riesgos`:
-  - `index.ts` todavía concentra listen/startup banner/shutdown, así que Wave 3 no está totalmente cerrado
-  - heartbeat runtime profundo sigue siendo un hotspot para Wave 4
-- `Bloqueos`:
-  - ninguno inmediato
-- `Siguiente paso`:
-  - decidir si el siguiente corte de `Wave 3` merece extraer el listen/bootstrap final o si ya conviene abrir `Wave 4`
+- `Phase/Wave`: `Wave 3`
+- `Goal`: decouple the heartbeat and backup schedulers from the main bootstrap
+- `Status`: `Wave 3 checkpoint met`
+- `Done`:
+  - extracted the heartbeat scheduler into `server/src/bootstrap/heartbeat-scheduler.ts`
+  - extracted the backup scheduler into `server/src/bootstrap/database-backup-scheduler.ts`
+  - `server/src/index.ts` now delegates both periodic behaviors
+  - added unit tests for both helpers with wiring verification and no-op checks when disabled
+  - the full matrix passed again: `pnpm -r typecheck`, `pnpm test:run`, `pnpm build`
+- `Risks`:
+  - `index.ts` still owns listen/startup banner/shutdown, so Wave 3 is not fully closed
+  - deeper heartbeat runtime work is the main target for Wave 4
+- `Blockers`:
+  - none immediate
+- `Next step`:
+  - decide whether Wave 3 should extract the final listen/bootstrap seam or whether Wave 4 should start now
 
 ## Checkpoint 07
-
-- `Fase/Ola`: `Wave 3`
-- `Objetivo`: cerrar la descomposición estructural del startup path
-- `Estado`: `Wave 3 closure verified`
-- `Hecho`:
-  - se extrajo el arranque de escucha, startup banner y board-claim warning a `server/src/bootstrap/server-listener.ts`
-  - `server/src/index.ts` ya solo orquesta helpers de bootstrap en lugar de contener los bloques operativos pesados
-  - se añadieron pruebas unitarias para el listener bootstrap y se mantuvo verde la matriz completa: `pnpm -r typecheck`, `pnpm test:run`, `pnpm build`
-- `Riesgos`:
-  - el runtime sigue teniendo comportamiento temporal y de recuperación que merece su propia ola de medición
-  - `heartbeat.ts` sigue siendo un hotspot funcional por volumen, no por falta de cobertura
-- `Bloqueos`:
-  - ninguno inmediato
-- `Siguiente paso`:
-  - abrir `Wave 4` sobre heartbeat runtime y baseline de performance con medición antes de optimización
+- `Phase/Wave`: `Wave 3`
+- `Goal`: close the structural decomposition of the startup path
+- `Status`: `Wave 3 closure verified`
+- `Done`:
+  - extracted the listen startup, startup banner, and board-claim warning into `server/src/bootstrap/server-listener.ts`
+  - `server/src/index.ts` now only orchestrates bootstrap helpers instead of hosting the heavy operational blocks
+  - added unit tests for the listener bootstrap and kept the full matrix green: `pnpm -r typecheck`, `pnpm test:run`, `pnpm build`
+- `Risks`:
+  - runtime still has temporal and recovery behavior that deserves its own measurement wave
+  - `heartbeat.ts` remains a functional hotspot because of size, not lack of coverage
+- `Blockers`:
+  - none immediate
+- `Next step`:
+  - open Wave 4 on heartbeat runtime and capture a performance baseline before optimization
 
 ## Checkpoint 08
-
-- `Fase/Ola`: `Wave 4`
-- `Objetivo`: capturar baseline real del runtime de heartbeat y falsar la confianza del wiring recién refactorizado
-- `Estado`: `Wave 4 in progress`
-- `Hecho`:
-  - se activó el concilio para auditar las fases previas y priorizar hotspots reales
-  - se corrigió el lifecycle de schedulers para que puedan limpiarse en fallos de arranque y cierre
-  - se añadió un smoke de composición para `startServer()` que cubre wiring y cleanup de schedulers
-  - la matriz completa volvió a pasar: `pnpm -r typecheck`, `pnpm test:run`, `pnpm build`
-- `Riesgos`:
-  - todavía no existe una medición de latencia/throughput real de `heartbeatService`
-  - `heartbeat.ts` sigue siendo el hotspot principal por volumen y complejidad
-- `Bloqueos`:
-  - ninguno inmediato
-- `Siguiente paso`:
-  - instrumentar o aislar primero `resolveWorkspaceForRun` y `startNextQueuedRunForAgent` para medir el baseline sin cambiar semántica
+- `Phase/Wave`: `Wave 4`
+- `Goal`: capture a real heartbeat runtime baseline and challenge confidence in the freshly refactored wiring
+- `Status`: `Wave 4 in progress`
+- `Done`:
+  - activated the council to review earlier phases and prioritize real hotspots
+  - fixed the scheduler lifecycle so it can be cleaned up on startup or shutdown failures
+  - added a composition smoke for `startServer()` covering scheduler wiring and cleanup
+  - the full matrix passed again: `pnpm -r typecheck`, `pnpm test:run`, `pnpm build`
+- `Risks`:
+  - there is still no real latency/throughput measurement for `heartbeatService`
+  - `heartbeat.ts` remains the main hotspot by volume and complexity
+- `Blockers`:
+  - none immediate
+- `Next step`:
+  - instrument or isolate `resolveWorkspaceForRun` and `startNextQueuedRunForAgent` first so the baseline can be measured without changing semantics
 
 ## Checkpoint 09
-
-- `Fase/Ola`: `Wave 4`
-- `Objetivo`: dejar listo el seam de profiling para capturar baseline sin tocar semántica normal
-- `Estado`: `Wave 4 profiling seam ready`
-- `Hecho`:
-  - se agregó `server/src/services/heartbeat-profiler.ts` como helper opt-in para medir spans
-  - `heartbeatService()` ahora puede registrar tiempos de `reapOrphanedRuns`, `resumeQueuedRuns`, `startNextQueuedRunForAgent`, `resolveWorkspaceForRun`, `executeRun` y `tickTimers`
-  - se añadió cobertura unitaria para el wrapper de profiling
-  - se documentó la variable `PAPERCLIP_HEARTBEAT_PROFILE` como contrato de medición local
-- `Riesgos`:
-  - el baseline real todavía depende de una corrida con el flag habilitado
-  - el logging de profiling puede ser ruidoso si se deja encendido fuera de una sesión de medición
-- `Bloqueos`:
-  - ninguno
-- `Siguiente paso`:
-  - ejecutar una corrida de medición real con profiling habilitado y guardar el baseline de los spans más caros
+- `Phase/Wave`: `Wave 4`
+- `Goal`: prepare the profiling seam needed to capture a baseline without changing normal semantics
+- `Status`: `Wave 4 profiling seam ready`
+- `Done`:
+  - added `server/src/services/heartbeat-profiler.ts` as an opt-in helper for measuring spans
+  - `heartbeatService()` can now record timings for `reapOrphanedRuns`, `resumeQueuedRuns`, `startNextQueuedRunForAgent`, `resolveWorkspaceForRun`, `executeRun`, and `tickTimers`
+  - added unit coverage for the profiling wrapper
+  - documented `PAPERCLIP_HEARTBEAT_PROFILE` as the local measurement contract
+- `Risks`:
+  - the real baseline still depends on a run with the flag enabled
+  - profiling logs can be noisy if left on outside a measurement session
+- `Blockers`:
+  - none
+- `Next step`:
+  - run a real measurement with profiling enabled and store the largest-span baseline
 
 ## Checkpoint 10
-
-- `Fase/Ola`: `Wave 4`
-- `Objetivo`: validar el harness de baseline y dejarlo listo para corridas repetibles
-- `Estado`: `Wave 4 baseline harness verified`
-- `Hecho`:
-  - se agregó `server/src/__tests__/heartbeat-baseline.test.ts` para ejercer el camino vacío de `heartbeat`
-  - la prueba captura spans de `reapOrphanedRuns`, `resumeQueuedRuns` y `tickTimers` con un profiler inyectado
-  - el harness quedó validado junto con `pnpm -r typecheck`, `pnpm test:run` y `pnpm build`
-- `Riesgos`:
-  - el baseline sigue siendo un proxy de estado vacío, no una corrida de producción con carga
-  - falta decidir qué fixture de datos representa mejor el flujo real que queremos medir primero
-- `Bloqueos`:
-  - ninguno
-- `Siguiente paso`:
-  - preparar una corrida con datos representativos y usar el seam opt-in para capturar el baseline real
+- `Phase/Wave`: `Wave 4`
+- `Goal`: validate the baseline harness and make it ready for repeatable runs
+- `Status`: `Wave 4 baseline harness verified`
+- `Done`:
+  - added `server/src/__tests__/heartbeat-baseline.test.ts` to exercise the empty `heartbeat` path
+  - the test captures `reapOrphanedRuns`, `resumeQueuedRuns`, and `tickTimers` spans with an injected profiler
+  - the harness passed together with `pnpm -r typecheck`, `pnpm test:run`, and `pnpm build`
+- `Risks`:
+  - the baseline is still a proxy for empty state, not a production load run
+  - we still need to decide which fixture best represents the real flow we should measure first
+- `Blockers`:
+  - none
+- `Next step`:
+  - prepare a representative run and use the opt-in seam to capture the real baseline
 
 ## Checkpoint 11
-
-- `Fase/Ola`: `Wave 4`
-- `Objetivo`: capturar una corrida real de heartbeat con datos mínimos pero ejecutables
-- `Estado`: `Wave 4 live baseline captured`
-- `Hecho`:
-  - se ejecutó un run real sobre embedded PostgreSQL con un agente `process`
-  - el profiler registró `resolveWorkspaceForRun`, `startNextQueuedRunForAgent` y `executeRun`
-  - `executeRun` fue el componente dominante en la corrida mínima
-  - se documentó el resultado en [docs/refactor/heartbeat-live-baseline.md](/Users/tomasvallejo/Desktop/paperclip/docs/refactor/heartbeat-live-baseline.md)
-- `Riesgos`:
-  - la corrida mínima no representa todavía un proyecto con `projectWorkspaces` y `issues`
-  - la medición sirve como baseline inicial, no como conclusión final de rendimiento
-- `Bloqueos`:
-  - ninguno
-- `Siguiente paso`:
-  - subir la complejidad del fixture y medir una ruta con workspace de proyecto para comparar contra esta baseline
+- `Phase/Wave`: `Wave 4`
+- `Goal`: capture a real heartbeat run with the smallest useful amount of data
+- `Status`: `Wave 4 live baseline captured`
+- `Done`:
+  - executed a real run on embedded PostgreSQL with a `process` agent
+  - the profiler recorded `resolveWorkspaceForRun`, `startNextQueuedRunForAgent`, and `executeRun`
+  - `executeRun` was the dominant component in the minimum run
+  - documented the result in [docs/refactor/heartbeat-live-baseline.md](/Users/tomasvallejo/Desktop/paperclip/docs/refactor/heartbeat-live-baseline.md)
+- `Risks`:
+  - the minimum run still does not represent a project with `projectWorkspaces` and `issues`
+  - this measurement is a starting baseline, not a final performance conclusion
+- `Blockers`:
+  - none
+- `Next step`:
+  - increase fixture complexity and measure a project-scoped path against this baseline
 
 ## Checkpoint 12
-
-- `Fase/Ola`: `Wave 4`
-- `Objetivo`: validar una corrida project-scoped estable y comparar contra la baseline mínima
-- `Estado`: `Wave 4 project-scoped baseline captured`
-- `Hecho`:
-  - se estabilizó el fixture de proyecto para usar un workspace git real con `projectWorkspaces` e `issues`
-  - la corrida project-scoped registró `startNextQueuedRunForAgent`, `resolveWorkspaceForRun` y `executeRun`
-  - el baseline ya cubre tanto el camino mínimo como la ruta de proyecto con workspace resuelto
-  - se mantuvo verde la matriz completa luego de la corrida
-- `Riesgos`:
-  - `heartbeat.ts` todavía concentra la mayor parte del trabajo pendiente para observabilidad comparativa y decisiones de optimización
-  - aún faltan mediciones de `reapOrphanedRuns()`, `resumeQueuedRuns()`, `tickTimers()` y contention multi-run
-- `Bloqueos`:
-  - ninguno inmediato
-- `Siguiente paso`:
-  - medir rutas adicionales de Wave 4 antes de proponer optimizaciones semánticas
+- `Phase/Wave`: `Wave 4`
+- `Goal`: validate a stable project-scoped run and compare it to the minimum baseline
+- `Status`: `Wave 4 project-scoped baseline captured`
+- `Done`:
+  - stabilized the project fixture to use a real git workspace with `projectWorkspaces` and `issues`
+  - the project-scoped run recorded `startNextQueuedRunForAgent`, `resolveWorkspaceForRun`, and `executeRun`
+  - the baseline now covers both the minimal path and the project path with a resolved workspace
+  - the full matrix stayed green after the run
+- `Risks`:
+  - `heartbeat.ts` still concentrates most of the work needed for comparative observability and optimization decisions
+  - we still lack measurements for `reapOrphanedRuns()`, `resumeQueuedRuns()`, `tickTimers()`, and multi-run contention
+- `Blockers`:
+  - none immediate
+- `Next step`:
+  - measure additional Wave 4 paths before proposing semantic optimizations
 
 ## Checkpoint 13
-
-- `Fase/Ola`: `Wave 4`
-- `Objetivo`: capturar un baseline de mantenimiento para `reapOrphanedRuns`, `resumeQueuedRuns` y `tickTimers`
-- `Estado`: `Wave 4 maintenance baseline captured`
-- `Hecho`:
-  - se añadió una corrida sintética con un run huérfano, una cola rescatable y una señal de timer vencida
-  - el profiler registró `reapOrphanedRuns`, `resumeQueuedRuns`, `tickTimers`, `startNextQueuedRunForAgent`, `resolveWorkspaceForRun` y `executeRun`
-  - `tickTimers()` mostró carga real con `checked: 3` y `enqueued: 1` en el fixture
-  - la matriz completa volvió a pasar luego de la nueva prueba
-- `Riesgos`:
-  - aún falta medir contention multi-run y comparar antes/después si se decide optimizar
-  - las mediciones siguen siendo de laboratorio, no de carga de producción
-- `Bloqueos`:
-  - ninguno inmediato
-- `Siguiente paso`:
-  - medir queue contention y decidir si Wave 4 cierra sin cambios semánticos o con una optimización mínima
+- `Phase/Wave`: `Wave 4`
+- `Goal`: capture a maintenance baseline for `reapOrphanedRuns`, `resumeQueuedRuns`, and `tickTimers`
+- `Status`: `Wave 4 maintenance baseline captured`
+- `Done`:
+  - added a synthetic run with an orphaned run, a salvageable queue, and an expired timer signal
+  - the profiler recorded `reapOrphanedRuns`, `resumeQueuedRuns`, `tickTimers`, `startNextQueuedRunForAgent`, `resolveWorkspaceForRun`, and `executeRun`
+  - `tickTimers()` showed real load with `checked: 3` and `enqueued: 1` in the fixture
+  - the full matrix passed again after the new test
+- `Risks`:
+  - we still need to measure multi-run contention and compare before/after if we decide to optimize
+  - these measurements are still lab baselines, not production load
+- `Blockers`:
+  - none immediate
+- `Next step`:
+  - measure queue contention and decide whether Wave 4 closes without semantic changes or with a minimal optimization
 
 ## Checkpoint 14
-
-- `Fase/Ola`: `Wave 4`
-- `Objetivo`: medir contention de cola para un mismo agente con varios runs pendientes
-- `Estado`: `Wave 4 contention baseline captured`
-- `Hecho`:
-  - se añadieron tres runs `queued` para el mismo agente y se drenaron con una sola llamada a `resumeQueuedRuns()`
-  - el profiler registró tres ejecuciones secuenciales de `executeRun` y múltiples `startNextQueuedRunForAgent`
-  - la corrida confirmó que el drenaje es secuencial y que la contención se comporta como se esperaba en el fixture
-  - la matriz completa quedó verde otra vez después de la prueba
-- `Riesgos`:
-  - todavía no existe comparación before/after porque no se ha propuesto una optimización concreta
-  - las mediciones siguen siendo de laboratorio, no de carga productiva
-- `Bloqueos`:
-  - ninguno inmediato
-- `Siguiente paso`:
-  - cerrar Wave 4 con decisión explícita de no optimizar o de abrir una optimización mínima y reversible
+- `Phase/Wave`: `Wave 4`
+- `Goal`: measure queue contention for one agent with several pending runs
+- `Status`: `Wave 4 contention baseline captured`
+- `Done`:
+  - added three `queued` runs for the same agent and drained them with a single `resumeQueuedRuns()` call
+  - the profiler recorded three sequential `executeRun` executions and multiple `startNextQueuedRunForAgent` spans
+  - the run confirmed that draining is sequential and that contention behaves as expected in the fixture
+  - the full matrix turned green again after the test
+- `Risks`:
+  - there is still no before/after comparison because no concrete optimization has been proposed yet
+  - the measurements are still lab-oriented, not production load
+- `Blockers`:
+  - none immediate
+- `Next step`:
+  - close Wave 4 with an explicit no-op decision or open a minimal, reversible optimization
 
 ## Checkpoint 15
-
-- `Fase/Ola`: `Wave 4`
-- `Objetivo`: aplicar la optimización mínima y segura en `tickTimers()` y cerrar la fase
-- `Estado`: `Wave 4 complete`
-- `Hecho`:
-  - `tickTimers()` ahora filtra agentes no elegibles en SQL y solo proyecta las columnas necesarias
-  - el cambio no modificó la semántica de wakeups, recovery ni queue draining
-  - la batería completa volvió a pasar: `pnpm -r typecheck`, `pnpm test:run`, `pnpm build`
-  - las cuatro corridas del baseline de `heartbeat` quedaron documentadas y coherentes entre sí
-- `Riesgos`:
-  - la optimización es deliberadamente pequeña; si se quiere más rendimiento, habría que asumir más complejidad y riesgo
-  - no existe una comparación before/after de carga productiva real
-- `Bloqueos`:
-  - ninguno
-- `Siguiente paso`:
-  - abrir `Wave 5` sobre validación avanzada, documentación final y cierre del plan
+- `Phase/Wave`: `Wave 4`
+- `Goal`: apply the smallest safe optimization to `tickTimers()` and close the phase
+- `Status`: `Wave 4 complete`
+- `Done`:
+  - `tickTimers()` now filters out ineligible agents in SQL and projects only the required columns
+  - the change did not alter wakeup, recovery, or queue-draining semantics
+  - the full battery passed again: `pnpm -r typecheck`, `pnpm test:run`, `pnpm build`
+  - the four heartbeat baselines were documented and remain internally consistent
+- `Risks`:
+  - the optimization is intentionally small; bigger performance gains would require more complexity and risk
+  - there is still no real production-load before/after comparison
+- `Blockers`:
+  - none
+- `Next step`:
+  - open Wave 5 for advanced validation, final documentation, and plan closure
 
 ## Checkpoint 16
-
-- `Fase/Ola`: `Wave 5`
-- `Objetivo`: cerrar la validación avanzada, consolidar la documentación final y declarar el plan listo
-- `Estado`: `Wave 5 complete`
-- `Hecho`:
-  - se consolidó el cierre de Wave 4 con la optimización mínima en `tickTimers()`
-  - se agregó el resumen final de release readiness en [docs/refactor/release-readiness.md](/Users/tomasvallejo/Desktop/paperclip/docs/refactor/release-readiness.md)
-  - la documentación operativa ya cubre startup, access/onboarding, heartbeat runtime, evidencias de prueba y lectura final de cierre
-  - la batería completa del workspace quedó validada en el último ciclo estable de refactor
-- `Riesgos`:
-  - no existe benchmark productivo real de carga, solo baselines de laboratorio y validación estructural
-  - el warning de chunks grandes del UI sigue siendo un tema aparte, fuera del alcance de esta refactorización
-- `Bloqueos`:
-  - ninguno
-- `Siguiente paso`:
-  - mantener estos artefactos como referencia estable del fork y solo reabrir una nueva ola si aparece un cambio funcional relevante
+- `Phase/Wave`: `Wave 5`
+- `Goal`: close the advanced validation, consolidate the final documentation, and declare the plan ready
+- `Status`: `Wave 5 complete`
+- `Done`:
+  - finalized Wave 4 with the minimal `tickTimers()` optimization
+  - added the final release-readiness summary in [docs/refactor/release-readiness.md](/Users/tomasvallejo/Desktop/paperclip/docs/refactor/release-readiness.md)
+  - the operational documentation now covers startup, access/onboarding, heartbeat runtime, test evidence, and the final closure readout
+  - the workspace battery passed in the latest stable refactor cycle
+- `Risks`:
+  - there is still no production load benchmark, only lab baselines and structural validation
+  - the large UI chunk warning is still a separate issue outside this refactor's scope
+- `Blockers`:
+  - none
+- `Next step`:
+  - keep these artifacts as the stable fork reference and only reopen a new wave if a meaningful functional change appears

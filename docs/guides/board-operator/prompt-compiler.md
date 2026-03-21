@@ -10,11 +10,11 @@ Instead of writing a vague issue by hand, you can:
 2. compile it into a structured brief
 3. review the generated objective, deliverables, acceptance criteria, and routing
 4. apply the compiled draft to the issue form
-5. create the final issue only after approval
+5. create the final issue only after human approval
 
 ## Where to use it
 
-Open the `New issue` dialog and switch from `Manual` to `Compiler`.
+Open the `New issue` dialog, then switch from `Manual` to `Compiler`.
 
 ## Workflow
 
@@ -25,7 +25,7 @@ Write the request as you would normally ask it.
 Example:
 
 ```text
-Build a benchmark sandbox for comparing models and keep the final report in Spanish.
+Build a benchmark sandbox for comparing models and keep the final report in English.
 ```
 
 ### 2. Add context
@@ -117,4 +117,4 @@ Use manual mode for:
 
 For the live Oracle validation battery, delivered artifacts, issue IDs, and operational findings, see:
 
-- [prompt-compiler-validation.md](/Users/tomasvallejo/Desktop/paperclip/docs/guides/board-operator/prompt-compiler-validation.md)
+- [prompt-compiler-validation.md](./prompt-compiler-validation.md)

@@ -54,7 +54,7 @@ export function PromptCompilerPanel(props: PromptCompilerPanelProps) {
             Prompt Compiler
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            Convierte una necesidad informal en una issue ejecutable con criterios de aceptación y routing.
+            Converts an informal request into an executable issue with acceptance criteria and routing.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -64,8 +64,8 @@ export function PromptCompilerPanel(props: PromptCompilerPanelProps) {
             onChange={(event) => onPreferredLanguageChange(event.target.value as PromptCompilerLanguagePreference)}
             disabled={disabled || isCompiling}
           >
-            <option value="auto">Idioma automático</option>
-            <option value="es">Español</option>
+            <option value="auto">Automatic language</option>
+            <option value="es">Spanish</option>
             <option value="en">English</option>
           </select>
           <Button
@@ -75,7 +75,7 @@ export function PromptCompilerPanel(props: PromptCompilerPanelProps) {
             disabled={disabled || isCompiling || rawRequest.trim().length === 0}
           >
             {isCompiling ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : null}
-            {isCompiling ? "Compilando..." : "Compilar"}
+            {isCompiling ? "Compiling..." : "Compile"}
           </Button>
         </div>
       </div>
@@ -83,20 +83,20 @@ export function PromptCompilerPanel(props: PromptCompilerPanelProps) {
       <div className="grid gap-3 p-4 lg:grid-cols-[1.2fr_0.8fr]">
         <div className="space-y-3">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Necesidad informal</label>
+            <label className="text-xs font-medium text-muted-foreground">Informal request</label>
             <textarea
               className="min-h-[110px] w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none"
-              placeholder="Describe lo que necesitas en lenguaje natural."
+              placeholder="Describe what you need in natural language."
               value={rawRequest}
               onChange={(event) => onRawRequestChange(event.target.value)}
               disabled={disabled || isCompiling}
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Contexto adicional</label>
+            <label className="text-xs font-medium text-muted-foreground">Additional context</label>
             <textarea
               className="min-h-[88px] w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm outline-none"
-              placeholder="Findings verificados, restricciones, links o contexto que no quieres perder."
+              placeholder="Verified findings, constraints, links, or context you do not want to lose."
               value={additionalContext}
               onChange={(event) => onAdditionalContextChange(event.target.value)}
               disabled={disabled || isCompiling}
@@ -170,12 +170,12 @@ export function PromptCompilerPanel(props: PromptCompilerPanelProps) {
                 onClick={onApply}
                 disabled={disabled || isCompiling || validation?.gateStatus === "reject"}
               >
-                Aplicar brief compilado
+                Apply compiled brief
               </Button>
             </>
           ) : (
             <div className="rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
-              Compila primero para ver el brief, su score y aplicar el draft al formulario de la issue.
+              Compile first to see the brief, its score, and apply the draft to the issue form.
             </div>
           )}
         </div>

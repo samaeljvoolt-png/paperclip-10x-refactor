@@ -157,18 +157,18 @@ function execCapture(command, args, options = {}) {
 function buildInstallGuidance(platform) {
   if (platform === "darwin") {
     return [
-      "Instala Git y curl si faltan.",
-      "Instala Node 24+ con el instalador oficial o Homebrew.",
-      "Luego vuelve a ejecutar ./scripts/setup-alquim-ia.sh",
+      "Install Git and curl if they are missing.",
+      "Install Node 24+ with the official installer or Homebrew.",
+      "Then rerun ./scripts/setup-alquim-ia.sh",
     ].join(" ");
   }
   if (platform === "linux") {
     return [
-      "Instala curl y git con tu gestor de paquetes.",
-      "Luego vuelve a ejecutar ./scripts/setup-alquim-ia.sh; el instalador oficial de OpenClaw resuelve Node si falta.",
+      "Install curl and git with your package manager.",
+      "Then rerun ./scripts/setup-alquim-ia.sh; the official OpenClaw installer handles Node if it is missing.",
     ].join(" ");
   }
-  return "Usa macOS o Linux para este setup.";
+  return "Use macOS or Linux for this setup.";
 }
 
 async function checkPrerequisites() {
@@ -210,7 +210,7 @@ async function promptChoice(rl, message, choices, defaultId = null) {
     stdout.write(`  ${index + 1}. ${choice.label}${marker}\n`);
   }
   while (true) {
-    const answer = (await rl.question("Selecciona una opción: ")).trim();
+    const answer = (await rl.question("Select an option: ")).trim();
     if (!answer && defaultId) {
       return choices.find((choice) => choice.id === defaultId) ?? choices[0];
     }
@@ -220,7 +220,7 @@ async function promptChoice(rl, message, choices, defaultId = null) {
     }
     const byId = choices.find((choice) => choice.id === answer);
     if (byId) return byId;
-    stdout.write("Opción inválida.\n");
+    stdout.write("Invalid option.\n");
   }
 }
 
@@ -726,7 +726,7 @@ async function main() {
     try {
       const shouldUpdate = args.yes
         ? false
-        : await promptConfirm(rl, "OpenClaw ya existe. ¿Quieres actualizarlo a la versión pública más reciente?", false);
+        : await promptConfirm(rl, "OpenClaw already exists. Do you want to update it to the latest public version?", false);
       if (shouldUpdate) {
         await installOrUpdateOpenClaw({ dryRun });
       }

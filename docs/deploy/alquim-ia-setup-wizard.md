@@ -1,65 +1,65 @@
 ---
 title: Alquim-IA Setup Wizard
-summary: Instalación guiada de OpenClaw público + Paperclip + empresa Alquim-IA
+summary: Guided installation for public OpenClaw + Paperclip + the Alquim-IA company
 ---
 
-## Objetivo
+## Purpose
 
-Este wizard existe para quitarle al operador principiante la parte más frágil del setup:
+This wizard exists to remove the most fragile parts of the setup for a first-time operator:
 
-- instalar OpenClaw público
-- generar y recuperar el gateway token
-- sembrar agents y skills de Alquim-IA
-- arrancar Paperclip local
-- crear la empresa completa en una sola pasada
+- install public OpenClaw
+- generate or recover the gateway token
+- seed the Alquim-IA agents and skills
+- start Paperclip locally
+- create the full company in one pass
 
-## Comando recomendado
+## Recommended Command
 
-Desde la raíz del repo:
+Run this from the repo root:
 
 ```bash
 ./scripts/setup-alquim-ia.sh
 ```
 
-## Qué valida
+## What It Validates
 
-- sistema operativo: macOS o Linux
+- operating system: macOS or Linux
 - `curl`
 - `git`
 - `node`
 - `pnpm`
 - `openclaw`
 
-Si `openclaw` no existe, el wrapper llama al instalador oficial público:
+If `openclaw` is missing, the wrapper calls the official public installer:
 
 ```bash
 curl -fsSL https://openclaw.ai/install.sh | bash -s -- --no-onboard
 ```
 
-## Qué pide al usuario
+## What It Asks From the User
 
-En el flujo normal, solo:
+In the normal flow, only:
 
-- proveedor principal de modelos
-- API key del proveedor
+- the primary model provider
+- the provider API key
 
-Si ya existe una key en variables de entorno, el wizard la reutiliza y no vuelve a pedirla.
+If a key is already present in an environment variable, the wizard reuses it and does not ask again.
 
-## Qué instala en OpenClaw
+## What It Installs Into OpenClaw
 
-- árbol de agentes de `Alquim-IA` en `~/.openclaw/agents`
-- skills públicas del repo en `~/.openclaw/skills`
-- bundle privado opcional en `~/.config/paperclip-bootstrap/alquim-ia.bundle`
+- the `Alquim-IA` agent tree in `~/.openclaw/agents`
+- the public skills from this repo in `~/.openclaw/skills`
+- an optional private bundle in `~/.config/paperclip-bootstrap/alquim-ia.bundle`
 
-## Bundle privado opcional
+## Optional Private Bundle
 
-Si quieres máxima paridad con tu stack privado, crea:
+If you want the closest possible match to your private stack, create:
 
 ```text
 ~/.config/paperclip-bootstrap/alquim-ia.bundle/
 ```
 
-Con esta estructura:
+With this structure:
 
 ```text
 agents/<slug>/AGENTS.md
@@ -68,33 +68,33 @@ docs/ORGANIZATION.md
 docs/SKILLS.md
 ```
 
-El wizard detecta ese bundle automáticamente y lo superpone sobre el perfil público.
+The wizard detects this bundle automatically and overlays it on top of the public profile.
 
-## Qué deja persistido
+## What It Persists
 
-- config privada del bootstrap:
+- private bootstrap config:
   - `~/.config/paperclip-bootstrap/alquim-ia.private.json`
-- logs locales de Paperclip:
+- local Paperclip logs:
   - `~/.config/paperclip-bootstrap/alquim-ia/logs/paperclip.log`
-- PID del Paperclip local levantado por el wizard:
+- PID for the local Paperclip process started by the wizard:
   - `~/.config/paperclip-bootstrap/alquim-ia/paperclip.pid`
 
-## Qué hace después de OpenClaw
+## What Happens After OpenClaw
 
-1. ejecuta `openclaw onboard --non-interactive`
-2. fuerza gateway token si falta
-3. recupera `gateway.auth.token`
-4. arma la config privada para Paperclip
-5. arranca Paperclip local si no está sano
-6. ejecuta `pnpm bootstrap:alquim-ia`
+1. runs `openclaw onboard --non-interactive`
+2. forces a gateway token if one is missing
+3. retrieves `gateway.auth.token`
+4. builds the private Paperclip config
+5. starts local Paperclip if it is not already healthy
+6. runs `pnpm bootstrap:alquim-ia`
 
-## Parámetros útiles
+## Useful Flags
 
 ```bash
 pnpm setup:alquim-ia --help
 ```
 
-Flags importantes:
+Important flags:
 
 - `--provider <id>`
 - `--api-key <key>`
@@ -106,18 +106,18 @@ Flags importantes:
 - `--skip-bootstrap`
 - `--dry-run`
 
-## Qué no guarda el branch público
+## What the Public Branch Does Not Store
 
-- API keys reales
-- gateway token real
-- claim files activos
-- llaves privadas
-- secretos de Better Auth
+- real API keys
+- the real gateway token
+- active claim files
+- private keys
+- Better Auth secrets
 
-## Siguiente paso recomendado
+## Recommended Next Step
 
-Cuando termine el wizard:
+When the wizard finishes:
 
-1. abre Paperclip en `http://127.0.0.1:3100`
-2. verifica la empresa `Alquim-IA`
-3. si usarás un dominio o despliegue remoto, cambia `paperclip.agentReachableApiUrl` en tu config privada y vuelve a correr `pnpm bootstrap:alquim-ia`
+1. open Paperclip at `http://127.0.0.1:3100`
+2. verify that the `Alquim-IA` company exists
+3. if you are using a domain or a remote deployment, update `paperclip.agentReachableApiUrl` in your private config and run `pnpm bootstrap:alquim-ia` again

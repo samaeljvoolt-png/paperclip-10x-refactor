@@ -83,7 +83,7 @@ Use this path if you want the least friction and are installing from scratch.
 
 The idea is to keep each step visual and simple so even the least technical user can get to the end of the flow.
 
-The wizard first asks you whether you prefer English or Spanish, and on macOS/Linux it validates/installs `git` + `curl` before proceeding. On Windows the wizard detects that you’re on a PC, offers to install WSL2 + Ubuntu (if needed), and then reminds you to restart, open the Ubuntu terminal, and rerun `./scripts/setup-alquim-ia.sh` from that shell.
+The wizard first asks you whether you prefer English or Spanish, and on macOS/Linux it validates/installs `git` + `curl` before proceeding. On Windows the wizard detects that you’re on a PC, offers to install WSL2 + Ubuntu (if needed), and then reminds you to restart, open the Ubuntu terminal, and rerun `./scripts/setup-alquim-ia.sh` from that shell. After each Node/pnpm install, the installer automatically appends `$HOME/.npm-global/bin` to your shell rc so `openclaw` stays visible in every new terminal.
 
 The wrapper is designed to keep the operator out of the weeds. It validates `curl`, `git`, `bash`, `node`, `pnpm`, and `openclaw`; if `openclaw` is missing, it installs the public version through the official installer.
 

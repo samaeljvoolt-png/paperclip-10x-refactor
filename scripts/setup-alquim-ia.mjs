@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { spawn, spawnSync } from "node:child_process";
-import { cp, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { appendFile, cp, mkdir, mkdtemp, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import readline from "node:readline/promises";
@@ -423,7 +423,31 @@ async function ensurePnpmAvailable({ dryRun = false }) {
     }
   }
 
+  await ensureNpmGlobalPath();
+
   return { action: "installed" };
+}
+
+async function ensureNpmGlobalPath() {
+  const npmGlobalBin = path.join(os.homedir(), ".npm-global", "bin");
+  const shell = (process.env.SHELL ?? "").split("/").pop() ?? "bash";
+  const rcPaths = {
+    bash: path.join(os.homedir(), ".bashrc"),
+    zsh: path.join(os.homedir(), ".zshrc"),
+  };
+  const rcPath = rcPaths[shell];
+  if (!rcPath) return;
+  const exportLine = `export PATH="${npmGlobalBin}:$PATH"`;
+  let content = "";
+  try {
+    content = await readFile(rcPath, "utf8");
+  } catch {
+    // ignore missing rc file
+  }
+  if (!content.includes(exportLine)) {
+    await appendFile(rcPath, `\n# Added by Alquim-IA installer\n${exportLine}\n`);
+    stdout.write(`Enabled npm global bin in ${rcPath}. Run "source ${rcPath}" or reopen the shell.\n`);
+  }
 }
 
 async function ensureRepoDependencies({ dryRun = false }) {

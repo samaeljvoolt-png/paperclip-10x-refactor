@@ -1,20 +1,17 @@
 <div align="center">
   <strong>Paperclip Refactor Foundation</strong>
   <br/>
-  Community-facing fork of Paperclip with modular startup, centralized onboarding, measured heartbeat runtime, and a conservative refactor baseline.
+  Public install path for Paperclip + OpenClaw teams, with a guided bootstrap for Alquim-IA.
 </div>
 
 <br/>
 
 <p align="center">
-  <img src="doc/assets/header.png" alt="Paperclip — runs your business" width="720" />
-</p>
-
-<p align="center">
   <a href="#quickstart"><strong>Quickstart</strong></a> &middot;
+  <a href="#installation-paths"><strong>Install</strong></a> &middot;
+  <a href="#troubleshooting"><strong>Troubleshooting</strong></a> &middot;
   <a href="https://paperclip.ing/docs"><strong>Docs</strong></a> &middot;
-  <a href="https://github.com/samaeljvoolt-png/paperclip-refactor-foundation"><strong>GitHub</strong></a> &middot;
-  <a href="https://discord.gg/m4HZY7xNG3"><strong>Discord</strong></a>
+  <a href="https://github.com/samaeljvoolt-png/paperclip-refactor-foundation"><strong>GitHub</strong></a>
 </p>
 
 <p align="center">
@@ -23,323 +20,163 @@
   <a href="https://discord.gg/m4HZY7xNG3"><img src="https://img.shields.io/discord/000000000?label=discord" alt="Discord" /></a>
 </p>
 
-<br/>
+## What this branch is
 
-<div align="center">
-  <video src="https://github.com/user-attachments/assets/773bdfb2-6d1e-4e30-8c5f-3487d5b70c8f" width="600" controls></video>
-</div>
+Paperclip Refactor Foundation is the public, reproducible foundation for installing and operating an Alquim-IA company on top of Paperclip and OpenClaw.
 
-<br/>
+OpenClaw provides the agents. Paperclip coordinates the company.
 
-## What is Paperclip Refactor Foundation?
+This branch exists so a non-technical operator can get from zero to a working company without hand-wiring agents, claims, gateway wiring, or deliverable enforcement.
 
-# Open-source orchestration for zero-human companies
+## What you get
 
-**If OpenClaw is an _employee_, Paperclip is the _company_**
-
-Paperclip Refactor Foundation is the community-facing refactor fork of Paperclip. It keeps the same orchestration model, but cleans up the startup path, centralizes onboarding behavior, and documents the runtime with real evidence so the codebase is easier to use, evaluate, and extend.
-
-Paperclip is a Node.js server and React UI that orchestrates a team of AI agents to run a business. Bring your own agents, assign goals, and track your agents' work and costs from one dashboard.
-
-It looks like a task manager — but under the hood it has org charts, budgets, governance, goal alignment, and agent coordination.
-
-**Manage business goals, not pull requests.**
-
-|        | Step            | Example                                                            |
-| ------ | --------------- | ------------------------------------------------------------------ |
-| **01** | Define the goal | _"Build the #1 AI note-taking app to $1M MRR."_                    |
-| **02** | Hire the team   | CEO, CTO, engineers, designers, marketers — any bot, any provider. |
-| **03** | Approve and run | Review strategy. Set budgets. Hit go. Monitor from the dashboard.  |
-
-<br/>
-
-> **Community fork** — This repository is the refactor foundation for the Paperclip codebase. It is intended to be readable, testable, and safe to extend.
-
-<br/>
-
-<div align="center">
-<table>
-  <tr>
-    <td align="center"><strong>Works<br/>with</strong></td>
-    <td align="center"><img src="doc/assets/logos/openclaw.svg" width="32" alt="OpenClaw" /><br/><sub>OpenClaw</sub></td>
-    <td align="center"><img src="doc/assets/logos/claude.svg" width="32" alt="Claude" /><br/><sub>Claude Code</sub></td>
-    <td align="center"><img src="doc/assets/logos/codex.svg" width="32" alt="Codex" /><br/><sub>Codex</sub></td>
-    <td align="center"><img src="doc/assets/logos/cursor.svg" width="32" alt="Cursor" /><br/><sub>Cursor</sub></td>
-    <td align="center"><img src="doc/assets/logos/bash.svg" width="32" alt="Bash" /><br/><sub>Bash</sub></td>
-    <td align="center"><img src="doc/assets/logos/http.svg" width="32" alt="HTTP" /><br/><sub>HTTP</sub></td>
-  </tr>
-</table>
-
-<em>If it can receive a heartbeat, it's hired.</em>
-
-</div>
-
-<br/>
-
-## Paperclip is right for you if
-
-- ✅ You want to build **autonomous AI companies**
-- ✅ You **coordinate many different agents** (OpenClaw, Codex, Claude, Cursor) toward a common goal
-- ✅ You have **20 simultaneous Claude Code terminals** open and lose track of what everyone is doing
-- ✅ You want agents running **autonomously 24/7**, but still want to audit work and chime in when needed
-- ✅ You want to **monitor costs** and enforce budgets
-- ✅ You want a process for managing agents that **feels like using a task manager**
-- ✅ You want to manage your autonomous businesses **from your phone**
-
-<br/>
-
-## Features
-
-<table>
-<tr>
-<td align="center" width="33%">
-<h3>🔌 Bring Your Own Agent</h3>
-Any agent, any runtime, one org chart. If it can receive a heartbeat, it's hired.
-</td>
-<td align="center" width="33%">
-<h3>🎯 Goal Alignment</h3>
-Every task traces back to the company mission. Agents know <em>what</em> to do and <em>why</em>.
-</td>
-<td align="center" width="33%">
-<h3>💓 Heartbeats</h3>
-Agents wake on a schedule, check work, and act. Delegation flows up and down the org chart.
-</td>
-</tr>
-<tr>
-<td align="center">
-<h3>💰 Cost Control</h3>
-Monthly budgets per agent. When they hit the limit, they stop. No runaway costs.
-</td>
-<td align="center">
-<h3>🏢 Multi-Company</h3>
-One deployment, many companies. Complete data isolation. One control plane for your portfolio.
-</td>
-<td align="center">
-<h3>🎫 Ticket System</h3>
-Every conversation traced. Every decision explained. Full tool-call tracing and immutable audit log.
-</td>
-</tr>
-<tr>
-<td align="center">
-<h3>🛡️ Governance</h3>
-You're the board. Approve hires, override strategy, pause or terminate any agent — at any time.
-</td>
-<td align="center">
-<h3>📊 Org Chart</h3>
-Hierarchies, roles, reporting lines. Your agents have a boss, a title, and a job description.
-</td>
-<td align="center">
-<h3>📱 Mobile Ready</h3>
-Monitor and manage your autonomous businesses from anywhere.
-</td>
-</tr>
-</table>
-
-<br/>
-
-## Problems Paperclip solves
-
-| Without Paperclip                                                                                                                     | With Paperclip                                                                                                                         |
-| ------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| ❌ You have 20 Claude Code tabs open and can't track which one does what. On reboot you lose everything.                              | ✅ Tasks are ticket-based, conversations are threaded, sessions persist across reboots.                                                |
-| ❌ You manually gather context from several places to remind your bot what you're actually doing.                                     | ✅ Context flows from the task up through the project and company goals — your agent always knows what to do and why.                  |
-| ❌ Folders of agent configs are disorganized and you're re-inventing task management, communication, and coordination between agents. | ✅ Paperclip gives you org charts, ticketing, delegation, and governance out of the box — so you run a company, not a pile of scripts. |
-| ❌ Runaway loops waste hundreds of dollars of tokens and max your quota before you even know what happened.                           | ✅ Cost tracking surfaces token budgets and throttles agents when they're out. Management prioritizes with budgets.                    |
-| ❌ You have recurring jobs (customer support, social, reports) and have to remember to manually kick them off.                        | ✅ Heartbeats handle regular work on a schedule. Management supervises.                                                                |
-| ❌ You have an idea, you have to find your repo, fire up Claude Code, keep a tab open, and babysit it.                                | ✅ Add a task in Paperclip. Your coding agent works on it until it's done. Management reviews their work.                              |
-
-<br/>
-
-## Why Paperclip is special
-
-Paperclip handles the hard orchestration details correctly.
-
-|                                   |                                                                                                               |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| **Atomic execution.**             | Task checkout and budget enforcement are atomic, so no double-work and no runaway spend.                      |
-| **Persistent agent state.**       | Agents resume the same task context across heartbeats instead of restarting from scratch.                     |
-| **Runtime skill injection.**      | Agents can learn Paperclip workflows and project context at runtime, without retraining.                      |
-| **Governance with rollback.**     | Approval gates are enforced, config changes are revisioned, and bad changes can be rolled back safely.        |
-| **Goal-aware execution.**         | Tasks carry full goal ancestry so agents consistently see the "why," not just a title.                        |
-| **Portable company templates.**   | Export/import orgs, agents, and skills with secret scrubbing and collision handling.                          |
-| **True multi-company isolation.** | Every entity is company-scoped, so one deployment can run many companies with separate data and audit trails. |
-
-<br/>
-
-## What Paperclip is not
-
-|                              |                                                                                                                      |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| **Not a chatbot.**           | Agents have jobs, not chat windows.                                                                                  |
-| **Not an agent framework.**  | We don't tell you how to build agents. We tell you how to run a company made of them.                                |
-| **Not a workflow builder.**  | No drag-and-drop pipelines. Paperclip models companies — with org charts, goals, budgets, and governance.            |
-| **Not a prompt manager.**    | Agents bring their own prompts, models, and runtimes. Paperclip manages the organization they work in.               |
-| **Not a single-agent tool.** | This is for teams. If you have one agent, you probably don't need Paperclip. If you have twenty — you definitely do. |
-| **Not a code review tool.**  | Paperclip orchestrates work, not pull requests. Bring your own review process.                                       |
-
-<br/>
+- A beginner-friendly setup wizard that validates the local machine before it touches the stack.
+- A one-command bootstrap path for the full Alquim-IA company profile.
+- Preconfigured agents and skills in the public branch.
+- Per-agent claim files instead of one shared global claim file.
+- Exact-path deliverable enforcement for issues that require a file, report, or artifact.
+- Reproducible smoke tests for the wizard and orchestration flow.
+- A public/private split so secrets stay out of the branch while the company structure stays reproducible.
 
 ## Quickstart
-
-Open source. Self-hosted. No Paperclip account required.
-
-```bash
-npx paperclipai onboard --yes
-```
-
-Or install from this repo:
-
-```bash
-git clone https://github.com/samaeljvoolt-png/paperclip-refactor-foundation.git
-cd paperclip-refactor-foundation
-pnpm install
-pnpm dev
-```
-
-This starts the API server at `http://localhost:3100`. An embedded PostgreSQL database is created automatically - no setup required.
-
-> **Requirements:** Node.js 20+, pnpm 9.15+
-
-### Alquim-IA One-Command Company Install
-
-This branch includes a reproducible company profile for `Alquim-IA`.
-
-For the beginner-friendly flow, run:
 
 ```bash
 ./scripts/setup-alquim-ia.sh
 ```
 
-That wizard:
+That is the recommended route for a first-time install.
 
-- installs the public OpenClaw CLI if needed
-- asks only for your model provider API key
-- seeds the Alquim-IA agents + skills into `~/.openclaw`
-- starts local Paperclip
-- bootstraps the full `Alquim-IA` company
+What the wizard does:
 
-If you want the lower-level bootstrap path instead, create your private config from:
+1. validates the local environment
+2. installs the public OpenClaw CLI if it is missing
+3. asks for only the provider API key
+4. generates or recovers the OpenClaw gateway token
+5. seeds the curated Alquim-IA agents and skills
+6. starts Paperclip locally
+7. bootstraps the company into the running instance
 
-`bootstrap/alquim-ia/private-config.example.json`
+If you only want to inspect the public repo without installing anything, read the docs first:
 
-Then run:
+- [Alquim-IA Setup Wizard](./docs/deploy/alquim-ia-setup-wizard.md)
+- [Alquim-IA Bootstrap](./docs/deploy/alquim-ia-bootstrap.md)
+
+## Installation Paths
+
+### Beginner path
+
+Use this path if you want the least friction and are installing from scratch.
 
 ```bash
+./scripts/setup-alquim-ia.sh
+```
+
+The wrapper is designed to keep the operator out of the weeds. It validates `curl`, `git`, `bash`, `node`, `pnpm`, and `openclaw`; if `openclaw` is missing, it installs the public version through the official installer.
+
+After that, it moves through OpenClaw onboarding, captures the gateway token, writes the private bootstrap config, and finishes by running the Paperclip bootstrap step.
+
+### Manual or private path
+
+Use this path if you already manage secrets, run a remote server, or want to control the company bootstrap explicitly.
+
+```bash
+mkdir -p ~/.config/paperclip-bootstrap
+cp bootstrap/alquim-ia/private-config.example.json ~/.config/paperclip-bootstrap/alquim-ia.private.json
 pnpm bootstrap:alquim-ia --private-config ~/.config/paperclip-bootstrap/alquim-ia.private.json
 ```
 
-That command imports the curated company, agents, hierarchy, prompts, claim files, and OpenClaw gateway wiring in one pass.
+Fill the private config with your real values for:
 
-Full guide:
+- `paperclip.apiUrl`
+- `paperclip.agentReachableApiUrl`
+- `openclaw.gatewayUrl`
+- `openclaw.gatewayToken`
+- `openclaw.agentsSourceDir`
+- `openclaw.skillsSourceDir`
 
-- [Alquim-IA Bootstrap](./docs/deploy/alquim-ia-bootstrap.md)
-- [Alquim-IA Setup Wizard](./docs/deploy/alquim-ia-setup-wizard.md)
+## Verification
 
-### Oracle Server Setup
-
-Use the same repo install flow on your Oracle machine:
-
-```bash
-git clone https://github.com/samaeljvoolt-png/paperclip-refactor-foundation.git
-cd paperclip-refactor-foundation
-pnpm install
-pnpm dev --authenticated-private
-```
-
-If you need OpenClaw to join the instance, follow [OpenClaw onboarding](doc/OPENCLAW_ONBOARDING.md). In practice:
-
-1. start Paperclip in auth mode
-2. start a clean OpenClaw instance
-3. generate the invite prompt
-4. approve the agent join in Paperclip
-5. confirm the agent is using `openclaw_gateway`
-
-For a public or semi-public server, prefer the authenticated/private mode over an open unauthenticated bind.
-
-<br/>
-
-## FAQ
-
-**What does a typical setup look like?**
-Locally, a single Node.js process manages an embedded Postgres and local file storage. For production, point it at your own Postgres and deploy however you like. Configure projects, agents, and goals — the agents take care of the rest.
-
-If you're a solo-entreprenuer you can use Tailscale to access Paperclip on the go. Then later you can deploy to e.g. Vercel when you need it.
-
-**Can I run multiple companies?**
-Yes. A single deployment can run an unlimited number of companies with complete data isolation.
-
-**How is Paperclip different from agents like OpenClaw or Claude Code?**
-Paperclip _uses_ those agents. It orchestrates them into a company — with org charts, budgets, goals, governance, and accountability.
-
-**Why should I use Paperclip instead of just pointing my OpenClaw to Asana or Trello?**
-Agent orchestration has subtleties in how you coordinate who has work checked out, how to maintain sessions, monitoring costs, establishing governance - Paperclip does this for you.
-
-(Bring-your-own-ticket-system is on the Roadmap)
-
-**Do agents run continuously?**
-By default, agents run on scheduled heartbeats and event-based triggers (task assignment, @-mentions). You can also hook in continuous agents like OpenClaw. You bring your agent and Paperclip coordinates.
-
-<br/>
-
-## Development
+After a successful install, check these first:
 
 ```bash
-pnpm dev              # Full dev (API + UI, watch mode)
-pnpm dev:once         # Full dev without file watching
-pnpm dev:server       # Server only
-pnpm build            # Build all
-pnpm typecheck        # Type checking
-pnpm test:run         # Run tests
-pnpm db:generate      # Generate DB migration
-pnpm db:migrate       # Apply migrations
+curl -sS http://127.0.0.1:3100/api/health | jq
+pnpm paperclipai doctor
 ```
 
-See [doc/DEVELOPING.md](doc/DEVELOPING.md) for the full development guide.
+Then confirm that:
 
-<br/>
+- the `Alquim-IA` company exists
+- the imported agents use `openclaw_gateway`
+- the gateway token is non-empty
+- the issue you asked for has a work product before it is closed
 
-## Roadmap
+If you want a reproducible end-to-end smoke, use the setup wizard smoke harness:
 
-- ⚪ Get OpenClaw onboarding easier
-- ⚪ Get cloud agents working e.g. Cursor / e2b agents
-- ⚪ ClipMart - buy and sell entire agent companies
-- ⚪ Easy agent configurations / easier to understand
-- ⚪ Better support for harness engineering
-- 🟢 Plugin system (e.g. if you want to add a knowledgebase, custom tracing, queues, etc)
-- ⚪ Better docs
+```bash
+node scripts/smoke/alquim-ia-setup-wizard-e2e.mjs
+```
 
-<br/>
+## Public vs private
 
-## Contributing
+What ships in this public branch:
 
-We welcome contributions. See the [contributing guide](CONTRIBUTING.md) for details.
+- `bootstrap/alquim-ia/public/*`
+- `scripts/setup-alquim-ia.sh`
+- `scripts/setup-alquim-ia.mjs`
+- `scripts/bootstrap-alquim-ia.mjs`
+- `docs/deploy/alquim-ia-setup-wizard.md`
+- `docs/deploy/alquim-ia-bootstrap.md`
+- the smoke and test coverage that proves the install works
 
-<br/>
+What stays private:
 
-## Community
+- API keys
+- gateway tokens
+- claim files with active credentials
+- Better Auth secrets
+- private OpenClaw workspaces
+- local master keys and runtime secrets
 
-- [Discord](https://discord.gg/m4HZY7xNG3) — Join the community
-- [GitHub Issues](https://github.com/samaeljvoolt-png/paperclip-refactor-foundation/issues) — bugs and feature requests
-- [GitHub Discussions](https://github.com/samaeljvoolt-png/paperclip-refactor-foundation/discussions) — ideas and RFC
+## Troubleshooting
 
-<br/>
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| `Instance setup required` or `Instance admin required` | The instance has no first board admin yet | Run `pnpm paperclipai auth bootstrap-ceo` in the Paperclip environment, open the invite URL it generates, and create the first admin. |
+| `OpenClaw no quedó disponible en PATH` after install | The shell has not reloaded PATH or the official installer did not finish cleanly | Open a new terminal, run `hash -r`, verify `command -v openclaw`, and rerun `./scripts/setup-alquim-ia.sh`. |
+| `Command not found in PATH: "codex"` | A `codex_local` agent was launched but the Codex CLI is not installed or not on PATH | Install the Codex CLI or use a different adapter; for the public Alquim-IA flow, prefer the `openclaw_gateway` agents that do not depend on `codex`. |
+| OpenClaw join or claim never completes | The invite prompt was not generated, pasted, or approved in the right place | Regenerate the invite prompt from Paperclip, paste it into a stock OpenClaw session, approve the join/device request, and retry the task. |
+| A deliverable issue will not close | The issue requires proof of output, not just a comment | Create the file or artifact first, then register a work product with the exact absolute `metadata.path` or a verifiable URL before marking the issue done. |
+| Oracle or reverse-proxy login loops | The external URL and the internal agent-reachable URL do not match | Set `PAPERCLIP_PUBLIC_URL`, `PAPERCLIP_AUTH_PUBLIC_BASE_URL`, and `PAPERCLIP_ALLOWED_HOSTNAMES` correctly, keep `paperclip.agentReachableApiUrl` reachable from the gateway, and rerun the bootstrap. |
 
-## License
+### Oracle / remote server note
 
-MIT &copy; 2026 Paperclip
+For Oracle or any remote deployment, use the same repo flow but keep the boundaries clear:
 
-## Star History
+- public browser traffic should point at the public origin
+- agent callbacks should use the private or internal URL that the gateway can reach
+- the auth bootstrap must happen before the first operator login
+- if you expose the UI behind a reverse proxy, confirm the forwarded host and public URL match the origin you actually use
 
-[![Star History Chart](https://api.star-history.com/image?repos=samaeljvoolt-png/paperclip-refactor-foundation&type=date&legend=top-left)](https://www.star-history.com/?repos=samaeljvoolt-png%2Fpaperclip-refactor-foundation&type=date&legend=top-left)
+## Reference docs
 
-<br/>
+- [API Authentication](./docs/api/authentication.md)
+- [Secrets Management](./docs/deploy/secrets.md)
+- [OpenClaw Onboarding](./doc/OPENCLAW_ONBOARDING.md)
+- [OpenClaw Docker Setup](./docs/guides/openclaw-docker-setup.md)
+- [Board Operator: Managing Agents](./docs/guides/board-operator/managing-agents.md)
+- [Board Operator: Managing Tasks](./docs/guides/board-operator/managing-tasks.md)
 
----
+## Why this fork exists
 
-<p align="center">
-  <img src="doc/assets/footer.jpg" alt="" width="720" />
-</p>
+Paperclip is the control plane for a company of agents.
 
-<p align="center">
-  <sub>Open source under MIT. Built for people who want to run companies, not babysit agents.</sub>
-</p>
+This fork focuses on the operational layer that makes that idea usable in practice:
+
+- startup that can be repeated
+- public profile that can be audited
+- company structure that can be imported
+- claims that do not collide across agents
+- deliverables that can be verified before closure
+- smoke tests that catch regressions before they reach production
+
+If you want the shortest path to a working company template, start with the wizard. If you want to customize the private parts, use the manual bootstrap and keep the public branch clean.

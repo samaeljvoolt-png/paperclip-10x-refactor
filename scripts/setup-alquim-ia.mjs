@@ -448,6 +448,10 @@ async function ensureNpmGlobalPath() {
     await appendFile(rcPath, `\n# Added by Alquim-IA installer\n${exportLine}\n`);
     stdout.write(`Enabled npm global bin in ${rcPath}. Run "source ${rcPath}" or reopen the shell.\n`);
   }
+  if (!process.env.PATH?.includes(npmGlobalBin)) {
+    process.env.PATH = `${npmGlobalBin}:${process.env.PATH ?? ""}`;
+    stdout.write(`Temporary PATH updated so the freshly installed tools are available during this session.\n`);
+  }
 }
 
 async function ensureRepoDependencies({ dryRun = false }) {

@@ -71,6 +71,18 @@ Use this path if you want the least friction and are installing from scratch.
 ./scripts/setup-alquim-ia.sh
 ```
 
+### Guided flow preview (Windows + WSL)
+
+1. **Language prompt.** When you run the script for the first time you choose English or Spanish. That lets the wizard speak clearly no matter your comfort level. (SCREENSHOT: dialog showing language choice.)
+
+2. **Windows detection.** If you are on a PC, the wizard explains that WSL2 + Ubuntu is needed and asks for permission to install it. Once it finishes, the script tells you to restart, open the Ubuntu terminal from Windows Terminal, and rerun the command from that shell. (SCREENSHOT: terminal output saying “WSL2 was installed”, plus a reminder to restart.)
+
+3. **Mac/Linux path.** On macOS or Linux the wizard installs missing prerequisites (`git`/`curl`) for you and then continues with the usual OpenClaw + Paperclip flow. (SCREENSHOT: terminal showing “Missing command(s) detected” and the package manager running.)
+
+4. **Post-WSL reminder.** The README now includes a quick checklist for Windows users: reboot, open Ubuntu, `cd` into the repo, run `./scripts/setup-alquim-ia.sh` again, and keep following the wizard. (SCREENSHOT: short 3-step checklist graphic.)
+
+The idea is to keep each step visual and simple so even the least technical user can get to the end of the flow.
+
 The wizard first asks you whether you prefer English or Spanish, and on macOS/Linux it validates/installs `git` + `curl` before proceeding. On Windows the wizard detects that you’re on a PC, offers to install WSL2 + Ubuntu (if needed), and then reminds you to restart, open the Ubuntu terminal, and rerun `./scripts/setup-alquim-ia.sh` from that shell.
 
 The wrapper is designed to keep the operator out of the weeds. It validates `curl`, `git`, `bash`, `node`, `pnpm`, and `openclaw`; if `openclaw` is missing, it installs the public version through the official installer.

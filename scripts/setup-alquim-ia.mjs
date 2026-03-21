@@ -123,6 +123,13 @@ function commandExists(command) {
   return result.status === 0;
 }
 
+async function runCommandWithSudo(command, args) {
+  const { code, stderr } = await execCapture("sudo", [command, ...args], { stream: true });
+  if (code !== 0) {
+    throw new Error(`sudo ${command} failed: ${stderr || "exit " + code}`);
+  }
+}
+
 function detectLinuxPackageManager() {
   if (commandExists("apt-get")) return "apt";
   if (commandExists("dnf")) return "dnf";
@@ -405,16 +412,30 @@ async function ensurePnpmAvailable({ dryRun = false }) {
     };
   }
 
-  if (corepackAvailable) {
+  const runCorepack = async () => {
     const enable = await execCapture("corepack", ["enable"], { stream: true });
     if (enable.code !== 0) {
-      throw new Error(`corepack enable failed: ${enable.stderr || enable.stdout}`);
+      throw new Error(enable.stderr || enable.stdout);
     }
     const prepare = await execCapture("corepack", ["prepare", "pnpm@9.15.4", "--activate"], {
       stream: true,
     });
     if (prepare.code !== 0) {
-      throw new Error(`corepack prepare pnpm failed: ${prepare.stderr || prepare.stdout}`);
+      throw new Error(prepare.stderr || prepare.stdout);
+    }
+  };
+
+  if (corepackAvailable) {
+    try {
+      await runCorepack();
+    } catch (error) {
+      if (/EACCES|permission denied/i.test(error.message)) {
+        stdout.write("corepack needs sudo to create symlinks. Retrying with sudo...\n");
+        await runCommandWithSudo("corepack", ["enable"]);
+        await runCommandWithSudo("corepack", ["prepare", "pnpm@9.15.4", "--activate"]);
+      } else {
+        throw new Error(`corepack enable failed: ${error.message}`);
+      }
     }
   } else {
     const install = await execCapture("npm", ["install", "-g", "pnpm@9.15.4"], { stream: true });

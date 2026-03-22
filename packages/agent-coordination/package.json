@@ -1,0 +1,25 @@
+{
+  "name": "@paperclipai/agent-coordination",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "bin": {
+    "agent-coord": "./src/cli.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "example:codex": "AGENT_TYPE=codex AGENT_NAME=\"Codex CLI\" tsx src/example.ts codex",
+    "example:gemini": "AGENT_TYPE=gemini AGENT_NAME=\"Gemini\" tsx src/example.ts gemini"
+  },
+  "dependencies": {
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.11.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  }
+}

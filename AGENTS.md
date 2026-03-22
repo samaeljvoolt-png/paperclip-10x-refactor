@@ -143,3 +143,84 @@ A change is done when all are true:
 2. Typecheck, tests, and build pass
 3. Contracts are synced across db/shared/server/ui
 4. Docs updated when behavior or commands change
+
+## 11. Multi-Agent Coordination
+
+When multiple AI agents (Codex, Gemini, Claude, etc.) work concurrently in this repository:
+
+### Use the Agent Coordination Module
+
+```typescript
+import { AgentSession } from '@paperclipai/agent-coordination';
+
+const session = new AgentSession({
+  agentType: 'codex', // or 'gemini', 'claude', etc.
+  agentName: 'Codex CLI',
+});
+
+await session.initialize();
+```
+
+### File Locking Protocol
+
+Before editing any file:
+
+```typescript
+// Acquire lock
+await session.acquireLock('path/to/file.ts');
+
+try {
+  // Edit the file
+  await editFile();
+  
+  // Log the change
+  await session.logFileOperation('write', 'path/to/file.ts');
+} finally {
+  // Always release the lock
+  await session.releaseLock('path/to/file.ts');
+}
+```
+
+### Activity Logging
+
+Log significant actions for other agents:
+
+```typescript
+await session.logTaskStart('feature-name', 'Implementing X feature');
+await session.logCommand('pnpm test', 'Running test suite');
+await session.logTaskComplete('feature-name');
+```
+
+### Inter-Agent Communication
+
+Leave messages for other agents:
+
+```typescript
+// Send message
+await session.sendMessage('Starting auth refactor, ETA 10 min', {
+  affectedFiles: ['src/auth.ts'],
+});
+
+// Check messages from others
+const messages = await session.getMessages();
+```
+
+### Cleanup
+
+Always cleanup when your session ends:
+
+```typescript
+process.on('exit', () => session.cleanup());
+// Or manually when done
+await session.cleanup();
+```
+
+### Best Practices
+
+1. **Lock before editing** - Always acquire locks before modifying files
+2. **Release promptly** - Don't hold locks longer than necessary
+3. **Log actions** - Help other agents understand what you're doing
+4. **Check for messages** - Other agents may have important context
+5. **Respect locks** - If a file is locked, wait or work on something else
+
+See `packages/agent-coordination/README.md` for full documentation.

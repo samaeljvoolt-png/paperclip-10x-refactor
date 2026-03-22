@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Agent } from "@paperclipai/shared";
-import { compilePromptCompilerBrief, validateCompiledBrief } from "../services/prompt-compiler.js";
+import { compilePromptCompilerBriefStatic, validateCompiledBrief } from "../services/prompt-compiler.js";
 
 const agents: Agent[] = [
   {
@@ -127,7 +127,7 @@ const agents: Agent[] = [
 
 describe("prompt compiler service", () => {
   it("compiles a Spanish improvement request into a verifiable brief", () => {
-    const result = compilePromptCompilerBrief(
+    const result = compilePromptCompilerBriefStatic(
       {
         rawRequest:
           "puedes decirle ahora que implementen un plan de mejora con esos findings y que cuando me entreguen un informe siempre sea en español",
@@ -176,7 +176,7 @@ describe("prompt compiler service", () => {
   });
 
   it("routes finance requests to CFO instead of generic CEO/CTO lanes", () => {
-    const result = compilePromptCompilerBrief(
+    const result = compilePromptCompilerBriefStatic(
       {
         rawRequest:
           "Crea un registro de riesgos y una nota de costo/beneficio para adoptar Prompt Compiler en producción, con informe final en español.",
@@ -194,7 +194,7 @@ describe("prompt compiler service", () => {
   });
 
   it("routes operational runbooks to Sammy and QA checklists to Dev Verifier", () => {
-    const runbook = compilePromptCompilerBrief(
+    const runbook = compilePromptCompilerBriefStatic(
       {
         rawRequest:
           "Redacta un runbook operativo corto para usar Prompt Compiler en Paperclip y entrega el informe final en español.",
@@ -204,7 +204,7 @@ describe("prompt compiler service", () => {
       },
       agents,
     );
-    const qaChecklist = compilePromptCompilerBrief(
+    const qaChecklist = compilePromptCompilerBriefStatic(
       {
         rawRequest:
           "Crea un checklist end-to-end de QA para Prompt Compiler en Paperclip y entrega el informe final en español.",
@@ -224,7 +224,7 @@ describe("prompt compiler service", () => {
   });
 
   it("routes executive consolidation packages to Sammy even when they mention validation status", () => {
-    const result = compilePromptCompilerBrief(
+    const result = compilePromptCompilerBriefStatic(
       {
         rawRequest:
           "Consolida los entregables reales del Prompt Compiler en un paquete final en español con resumen ejecutivo, artefactos producidos, estado de validación y próximos pasos.",

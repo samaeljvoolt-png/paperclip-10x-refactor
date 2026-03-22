@@ -134,7 +134,7 @@ export function promptCompilerRoutes(db: Db) {
     const companyId = req.params.companyId as string;
     assertCompanyAccess(req, companyId);
     const agents = await agentsSvc.list(companyId);
-    const result = compilePromptCompilerBrief(req.body, agents);
+    const result = await compilePromptCompilerBrief(req.body, agents);
     res.json(result);
   });
 

@@ -470,7 +470,7 @@ export function validateCompiledBrief(brief: PromptCompilerBrief): PromptCompile
   };
 }
 
-export function compilePromptCompilerBrief(
+export function compilePromptCompilerBriefStatic(
   input: PromptCompilerCompileRequest,
   agents: CompilerAgent[],
 ): { brief: PromptCompilerBrief; validation: PromptCompilerValidationResult; issueDraft: PromptCompilerIssueDraft } {
@@ -570,4 +570,105 @@ export function compilePromptCompilerBrief(
   };
 
   return { brief, validation, issueDraft };
+}
+
+export async function compilePromptCompilerBrief(
+  input: PromptCompilerCompileRequest,
+  agents: CompilerAgent[],
+): Promise<{ brief: PromptCompilerBrief; validation: PromptCompilerValidationResult; issueDraft: PromptCompilerIssueDraft }> {
+  const apiKey = process.env.OPENAI_API_KEY?.trim();
+  if (!apiKey) {
+    return compilePromptCompilerBriefStatic(input, agents);
+  }
+
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-4o",
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert combination of a Project Manager, Product Owner, and Solutions Architect.
+Your job is to translate informal user requests into rigorous, executable, and testable engineering issue briefs.
+You must output a JSON object representing a PromptCompilerBrief. 
+Return only the JSON object with the following fields:
+- intentType: string (e.g. "audit", "bugfix", "refactor", "automation", "content", "ops", "web_app", "research", "feature", "general")
+- language: "es" or "en"
+- title: string (short, descriptive)
+- objective: string
+- problemStatement: string
+- context: string
+- inScope: string[]
+- outOfScope: string[]
+- constraints: string[]
+- assumptions: string[]
+- deliverables: string[]
+- acceptanceCriteria: string[] (must be testable)
+- evidencePlan: string[] (how to verify completion)
+- roleRouting: { orchestrator: string | null; executors: string[]; verification: string[] }
+- risks: { risk: string; impact: "low" | "medium" | "high"; mitigation: string; }[]
+- openQuestions: string[]
+
+Available routing roles for orchestrator/executors/verification: ${agents.length > 0 ? agents.map(a => a.role).join(", ") : "ceo, cto, qa, sammy"}`
+          },
+          {
+            role: "user",
+            content: `Raw Request:\n${input.rawRequest}\n\nAdditional Context:\n${input.additionalContext ?? "None"}\n\nLanguage Preference: ${input.preferredLanguage}`
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch from LLM: " + response.statusText);
+    }
+
+    const data = await response.json();
+    const rawBrief = JSON.parse(data.choices[0].message.content);
+
+    const brief: PromptCompilerBrief = {
+      schemaVersion: "prompt_compiler.v1",
+      status: (rawBrief.openQuestions && rawBrief.openQuestions.length > 0) ? "blocked" : "ready",
+      intentType: rawBrief.intentType ?? "general",
+      language: rawBrief.language === "es" || rawBrief.language === "en" ? rawBrief.language : "en",
+      title: rawBrief.title ?? "Compiled Request",
+      objective: rawBrief.objective ?? "",
+      problemStatement: rawBrief.problemStatement ?? "",
+      context: rawBrief.context ?? "",
+      inScope: Array.isArray(rawBrief.inScope) ? rawBrief.inScope : [],
+      outOfScope: Array.isArray(rawBrief.outOfScope) ? rawBrief.outOfScope : [],
+      constraints: Array.isArray(rawBrief.constraints) ? rawBrief.constraints : [],
+      assumptions: Array.isArray(rawBrief.assumptions) ? rawBrief.assumptions : [],
+      deliverables: Array.isArray(rawBrief.deliverables) ? rawBrief.deliverables : [],
+      acceptanceCriteria: Array.isArray(rawBrief.acceptanceCriteria) ? rawBrief.acceptanceCriteria : [],
+      evidencePlan: Array.isArray(rawBrief.evidencePlan) ? rawBrief.evidencePlan : [],
+      roleRouting: {
+        orchestrator: rawBrief.roleRouting?.orchestrator ?? null,
+        executors: Array.isArray(rawBrief.roleRouting?.executors) ? rawBrief.roleRouting.executors : [],
+        verification: Array.isArray(rawBrief.roleRouting?.verification) ? rawBrief.roleRouting.verification : [],
+      },
+      risks: Array.isArray(rawBrief.risks) ? rawBrief.risks : [],
+      openQuestions: Array.isArray(rawBrief.openQuestions) ? rawBrief.openQuestions : [],
+    };
+
+    const validation = validateCompiledBrief(brief);
+    const suggestedAssignee = resolveSuggestedAssignee(agents, brief.roleRouting.orchestrator ?? null);
+    
+    const issueDraft: PromptCompilerIssueDraft = {
+      title: brief.title,
+      description: buildMarkdownBrief(brief, input.rawRequest, input.additionalContext || null),
+      suggestedAssigneeRole: brief.roleRouting.orchestrator ?? null,
+      suggestedAssigneeAgentId: suggestedAssignee?.id ?? null,
+    };
+
+    return { brief, validation, issueDraft };
+  } catch (error) {
+    return compilePromptCompilerBriefStatic(input, agents);
+  }
 }

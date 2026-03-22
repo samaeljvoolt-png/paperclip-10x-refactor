@@ -1149,7 +1149,8 @@ export function NewIssueDialog() {
           </div>
         </div>
 
-        {issueCreationMode === "compiled" ? (
+        <div className="flex-1 overflow-y-auto min-h-0 flex flex-col">
+          {issueCreationMode === "compiled" ? (
           <PromptCompilerPanel
             rawRequest={compilerRawRequest}
             additionalContext={compilerAdditionalContext}
@@ -1426,7 +1427,7 @@ export function NewIssueDialog() {
 
         {/* Description */}
         <div
-          className={cn("px-4 pb-2 overflow-y-auto min-h-0 border-t border-border/60 pt-3", expanded ? "flex-1" : "")}
+          className="px-4 pb-2 border-t border-border/60 pt-3 flex-1 shrink-0"
           onDragEnter={handleFileDragEnter}
           onDragOver={handleFileDragOver}
           onDragLeave={handleFileDragLeave}
@@ -1522,6 +1523,7 @@ export function NewIssueDialog() {
               ) : null}
             </div>
           ) : null}
+        </div>
         </div>
 
         {/* Property chips bar */}
